@@ -3,18 +3,23 @@ import { assets, songsData } from "../assets/assets";
 
 const Player = () => {
     return (
-        <div  className="h-[12%] bg-black flex justify-between items-center text-white px-6">
-            <div>
+        <div className="h-[12%] bg-black flex justify-between items-center text-white px-6" 
+             style={{
+                 padding: 'calc(var(--screen-width) * 0.01)',
+                 minHeight: '80px'
+             }}>
+            <div style={{ 
+                opacity: 'calc(1 - var(--is-mobile))',
+                transition: 'opacity 0.3s'
+            }}>
                 <div>
-                <img className="w-9" src={songsData[0].image} alt="" />
+                    <img className="w-9" src={songsData[0].image} alt="" />
                     <p>{songsData[0].name}</p>
                     <p>{songsData[0].desc}</p>
                 </div>
             </div>
-
             <div className="flex flex-col items-center gap-1 m-auto">
-
-                <div className="flex items-center gap-4 ">
+                <div className="flex items-center gap-4">
                     <img className="w-4 cursor-pointer" src={assets.shuffle_icon} alt="" />
                     <img className="w-4 cursor-pointer" src={assets.prev_icon} alt="" />
                     <img className="w-4 cursor-pointer" src={assets.play_icon} alt="" />
@@ -24,14 +29,15 @@ const Player = () => {
 
                 <div className="flex items-center gap-5">
                     <p>1:00</p>
-                    <div className="w-[60vw] max-w-[500px] bg-gray-300 rounded-full cursor-pointer">
+                    <div className="w-[60vw] max-w-[500px] bg-gray-300 rounded-full cursor-pointer"
+                         style={{
+                             width: 'clamp(200px, calc(var(--screen-width) * 0.4), 500px)'
+                         }}>
                         <hr className="h-1 border-none w-20 bg-green-500 rounded-full" />
                     </div>
                     <p>3:30</p>
                 </div>
-
             </div>
-
             <div className="hidden lg:flex items-center gap-2 opacity-75">
                 <img className="w-4" src={assets.plays_icon} alt="" />
                 <img className="w-4" src={assets.mic_icon} alt="" />
@@ -44,7 +50,6 @@ const Player = () => {
                 <img className="w-4" src={assets.mini_player_icon} alt="" />
                 <img className="w-4" src={assets.zoom_icon} alt="" />
             </div>
-
         </div>
     )
 }
