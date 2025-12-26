@@ -3,7 +3,7 @@ import { assets, songsData } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const Player = () => {
-    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack} = React.useContext(PlayerContext);
+    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong} = React.useContext(PlayerContext);
     return (
         <div className="h-[12%] bg-black flex justify-between items-center text-white px-6 py-2 overflow-auto">
             <div className="flex items-center gap-4 w-[25%]">
@@ -29,7 +29,7 @@ const Player = () => {
 
                 <div className="flex items-center gap-3 w-full">
                     <p className="text-xs text-gray-400">{`${trackProgress.currentTime.minutes}:${trackProgress.currentTime.seconds}`}</p>
-                    <div ref={seekBg} className="flex-1 bg-gray-700 h-1 rounded-full cursor-pointer group">
+                    <div ref={seekBg} onClick={seekSong} className="flex-1 bg-gray-700 h-1 rounded-full cursor-pointer group">
                         <hr ref={seekBar} className="h-1 border-none w-1/4 bg-green-500 rounded-full group-hover:bg-green-400 transition-colors" />
                     </div>
                     <p className="text-xs text-gray-400">{`${trackProgress.duration.minutes}:${trackProgress.duration.seconds}`}</p>

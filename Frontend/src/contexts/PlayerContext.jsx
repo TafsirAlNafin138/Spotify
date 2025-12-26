@@ -20,6 +20,23 @@ const PlayerContextProvider = (props) => {
     const seekBg = useRef();
     const seekBar = useRef();
 
+
+//     const fetchSong = async (id) => {
+//   const res = await fetch(`/api/songs/${id}`);
+//   return await res.json();
+// };
+
+// const playWithId = async (id) => {
+//   const song = await fetchSong(id);
+//   setTrack(song);
+//   audioRef.current.src = song.url; // set new source
+//   await new Promise((resolve) => {
+//     audioRef.current.onloadedmetadata = resolve;
+//   });
+//   await audioRef.current.play();
+//   setPlayerState(true);
+// };
+
     const playWithId = async (id) => {
             setTrack(songsData[id]);
             await audioRef.current.play();
@@ -47,6 +64,25 @@ const PlayerContextProvider = (props) => {
         if (nextId >= songsData.length) nextId = 0;
         playWithId(nextId);
     }  
+
+
+    const seekSong = async (e) => {
+        if (!seekBg.current || !audioRef.current) return;
+
+//         if (isNaN(audioRef.current.duration)) {
+//     await new Promise((res) => {
+//       audioRef.current.onloadedmetadata = res;
+//     });
+//   }
+        
+        const seekBarWidth = seekBg.current.clientWidth;
+        const clickX = e.nativeEvent.offsetX;
+        const duration = audioRef.current.duration;
+        
+        if (isNaN(duration) || duration <= 0) return;
+        
+        audioRef.current.currentTime = (clickX / seekBarWidth) * duration;
+    }
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -106,7 +142,8 @@ const PlayerContextProvider = (props) => {
         pause,
         playWithId,
         prevTrack,
-        nextTrack
+        nextTrack,
+        seekSong
     };
 
     return (
