@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import NavigationBar from "./NavigationBar";
 import { albumsData, assets, songsData } from "../assets/assets";
+import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const DisplayAlbum = () => {
   const { id } = useParams();
-  const albumdata = albumsData.find((album) => album.id === parseInt(id));
+  const albumdata = albumsData[parseInt(id)];
+  const {playWithId} = React.useContext(PlayerContext);
   // const [hoveredSong, setHoveredSong] = useState(null);
   // const [likedSongs, setLikedSongs] = useState(new Set());
 
@@ -60,6 +62,7 @@ const DisplayAlbum = () => {
           {songsData.map((item, index) => (   
             <div
                 key={index}
+                onClick={() => playWithId(item.id)}
                 className="grid grid-cols-3 sm:grid-cols-4 items-center gap-4 py-2 px-2 rounded hover:bg-[#ffffff26] cursor-pointer"
             >
                 
