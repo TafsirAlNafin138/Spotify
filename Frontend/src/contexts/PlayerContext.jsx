@@ -4,7 +4,7 @@ const PlayerContext = createContext();
 
 const PlayerContextProvider = (props) => {
 
-    const [track, setTrack] = useState(songsData[1]);
+    const [track, setTrack] = useState(songsData[0]);
     const [playerState, setPlayerState] = useState(false); // false - paused, true - playing
     const[trackProgress, setTrackProgress] = useState({  // song player progress in seconds and minutes
         currentTime: {
@@ -16,9 +16,18 @@ const PlayerContextProvider = (props) => {
             minutes: 0
         }
     });
+    const [volume, setVolume] = useState(0.75);
+    const prevVolumeRef = useRef(volume);
+
+    const [queue, setQueue] = useState([]);
+    const [isQueueOpen, setIsQueueOpen] = useState(false);
+
+
     const audioRef = useRef();
     const seekBg = useRef();
     const seekBar = useRef();
+    const volumeBg = useRef();
+    const volumeBar = useRef();
 
 
 //     const fetchSong = async (id) => {
@@ -36,6 +45,14 @@ const PlayerContextProvider = (props) => {
 //   await audioRef.current.play();
 //   setPlayerState(true);
 // };
+   
+//    const parsetimeStringToSeconds = (str) => {
+//      const parts = str.split(":").map(Number);
+//      if (parts.length === 1) return parts[0] || 0;
+//      if (parts.length === 2) return parts[0] * 60 + (parts[1] || 0);
+//      const [h, m, s] = parts.slice(-3);
+//      return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+//    };
 
     const playWithId = async (id) => {
             setTrack(songsData[id]);
@@ -82,6 +99,46 @@ const PlayerContextProvider = (props) => {
         if (isNaN(duration) || duration <= 0) return;
         
         audioRef.current.currentTime = (clickX / seekBarWidth) * duration;
+    }
+
+    const loopSeek = () => {
+        if (!audioRef.current) return;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+        setPlayerState(true);
+    }
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = volume;
+        }
+        if (volumeBar.current) {
+            volumeBar.current.style.width = `${Math.round(volume * 100)}%`;
+        }
+    }, [audioRef, volume]);
+
+    const speakerseek = (e) => {
+        if (!volumeBg.current || !audioRef.current) return;
+        const seekBarWidth = volumeBg.current.clientWidth;
+        const clickX = e.nativeEvent ? e.nativeEvent.offsetX : 0;
+        const newVol = Math.min(1, Math.max(0, clickX / seekBarWidth));
+        setVolume(newVol);
+        audioRef.current.volume = newVol;
+    }
+
+    const volumeSeek = () => {
+        if (!audioRef.current) return;
+        if (audioRef.current.volume > 0) {
+            prevVolumeRef.current = volume;
+            audioRef.current.volume = 0;
+            if (volumeBar.current) volumeBar.current.style.width = `0%`;
+        } else {
+            const restore = prevVolumeRef.current || 0.5;
+            setVolume(restore);
+            audioRef.current.muted = false;
+            audioRef.current.volume = restore;
+            if (volumeBar.current) volumeBar.current.style.width = `${Math.round(restore * 100)}%`;
+        }
     }
 
     useEffect(() => {
@@ -143,7 +200,12 @@ const PlayerContextProvider = (props) => {
         playWithId,
         prevTrack,
         nextTrack,
-        seekSong
+        seekSong,
+        volumeSeek,
+        speakerseek,
+        volumeBg,
+        volumeBar,
+        loopSeek
     };
 
     return (

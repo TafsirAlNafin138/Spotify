@@ -3,7 +3,36 @@ import { assets, songsData } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const Player = () => {
-    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong} = React.useContext(PlayerContext);
+    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong, volumeSeek, speakerseek, volumeBg, volumeBar, loopSeek} = React.useContext(PlayerContext);
+    
+    const toggleMiniPlayer = () => {
+        // Toggle mini player mode - makes the player compact/picture-in-picture style
+        const player = document.querySelector('.h-\\[12\\%\\]');
+        if (player) {
+            player.classList.toggle('fixed');
+            player.classList.toggle('bottom-4');
+            player.classList.toggle('right-4');
+            player.classList.toggle('w-80');
+            player.classList.toggle('h-auto');
+            player.classList.toggle('rounded-lg');
+            player.classList.toggle('shadow-2xl');
+            player.classList.toggle('z-50');
+        }
+    };
+
+    const toggleFullscreen = () => {
+        // Toggle fullscreen mode for the player
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    };
+
     return (
         <div className="h-[12%] bg-black flex justify-between items-center text-white px-6 py-2 overflow-auto">
             <div className="flex items-center gap-4 w-[25%]">
@@ -24,29 +53,32 @@ const Player = () => {
                     <img onClick={play} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.play_icon} alt="Play" />
                     }
                     <img onClick={nextTrack} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.next_icon} alt="" />
-                    <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.loop_icon} alt="" />
+                    <img onClick={loopSeek} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.loop_icon} alt="" />
                 </div>
 
                 <div className="flex items-center gap-3 w-full">
                     <p className="text-xs text-gray-400">{`${trackProgress.currentTime.minutes}:${trackProgress.currentTime.seconds}`}</p>
-                    <div ref={seekBg} onClick={seekSong} className="flex-1 bg-gray-700 h-1 rounded-full cursor-pointer group">
-                        <hr ref={seekBar} className="h-1 border-none w-1/4 bg-green-500 rounded-full group-hover:bg-green-400 transition-colors" />
+                    <div ref={seekBg} onClick={seekSong} className="flex-1 bg-gray-700 h-1 rounded-full cursor-pointer group relative">
+                        <hr ref={seekBar} className="h-1 border-none bg-green-500 rounded-full group-hover:bg-green-400 transition-all absolute top-0 left-0" style={{width: `${(trackProgress.currentTime.minutes * 60 + trackProgress.currentTime.seconds) / (trackProgress.duration.minutes * 60 + trackProgress.duration.seconds) * 100}%`}} />
                     </div>
                     <p className="text-xs text-gray-400">{`${trackProgress.duration.minutes}:${trackProgress.duration.seconds}`}</p>
                 </div>
             </div>
 
             <div className="hidden lg:flex items-center gap-3 w-[25%] justify-end">
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" />
+                {/* <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" /> */}
                 <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.mic_icon} alt="" />
                 <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.queue_icon} alt="" />
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.speaker_icon} alt="" />
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.volume_icon} alt="" />
-                <div className="w-24 bg-gray-700 h-1 rounded-full cursor-pointer group">
-                    <hr className="h-1 border-none w-3/4 bg-white rounded-full group-hover:bg-green-500 transition-colors" />
+                <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 cursor-pointer hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                    <div ref={volumeBg} onClick={speakerseek} className="w-24 bg-gray-700 h-1 rounded-full cursor-pointer group relative">
+                        <hr ref={volumeBar} onClick={volumeSeek} className="h-1 border-none bg-white rounded-full group-hover:bg-green-500 transition-all absolute top-0 left-0" />
+                    </div>
                 </div>
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.mini_player_icon} alt="" />
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.zoom_icon} alt="" />
+                <img onClick={toggleMiniPlayer} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.mini_player_icon} alt="" />
+                <img onClick={toggleFullscreen} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.zoom_icon} alt="" />
             </div>
         </div>
     )
