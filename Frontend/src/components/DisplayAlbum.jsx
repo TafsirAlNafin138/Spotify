@@ -7,7 +7,7 @@ import { PlayerContext } from "../contexts/PlayerContext.jsx";
 const DisplayAlbum = () => {
   const { id } = useParams();
   const albumdata = albumsData[parseInt(id)];
-  const {playWithId} = React.useContext(PlayerContext);
+  const {playWithId, toggleFollow, isFollowing, getFollowerCount} = React.useContext(PlayerContext);
   // const [hoveredSong, setHoveredSong] = useState(null);
   // const [likedSongs, setLikedSongs] = useState(new Set());
 
@@ -44,11 +44,26 @@ const DisplayAlbum = () => {
                 alt="Spotify Logo"
                 className="w-6 inline-block mr-2"
               />
-              <b>Spotify </b>
+              <b>{albumdata.artist || 'Spotify'} </b>
               {/* &#8226; {likesData.length} likes */}
               &#8226; <b> 50 songs </b>
               {/* {albumdata.totalDuration} mins */}
             </p>
+            <div className="flex items-center gap-4 mt-4">
+              <button
+                onClick={() => toggleFollow(albumdata.artistId)}
+                className={`px-6 py-2 rounded-full font-semibold transition-all ${
+                  isFollowing(albumdata.artistId)
+                    ? 'bg-transparent border-2 border-white text-white hover:border-gray-300 hover:scale-105'
+                    : 'bg-white text-black hover:bg-gray-200 hover:scale-105'
+                }`}
+              >
+                {isFollowing(albumdata.artistId) ? 'Following' : 'Follow'}
+              </button>
+              <p className="text-sm text-gray-400">
+                <span className="text-white font-semibold">{getFollowerCount(albumdata.artistId).toLocaleString()}</span> followers
+              </p>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 mt-10 mb-4 pl-2 text-[#a7a7a7]">

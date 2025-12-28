@@ -3,10 +3,11 @@ import { assets, songsData } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const Player = () => {
-    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong, volumeSeek, speakerseek, volumeBg, volumeBar, loopSeek} = React.useContext(PlayerContext);
+    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong, volumeSeek, speakerseek, volumeBg, volumeBar, loopSeek, toggleLike, isLiked, getLikeCount} = React.useContext(PlayerContext);
+    
+    const [showLikeCount, setShowLikeCount] = React.useState(false);
     
     const toggleMiniPlayer = () => {
-        // Toggle mini player mode - makes the player compact/picture-in-picture style
         const player = document.querySelector('.h-\\[12\\%\\]');
         if (player) {
             player.classList.toggle('fixed');
@@ -21,7 +22,6 @@ const Player = () => {
     };
 
     const toggleFullscreen = () => {
-        // Toggle fullscreen mode for the player
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
                 console.log(`Error attempting to enable fullscreen: ${err.message}`);
@@ -67,7 +67,26 @@ const Player = () => {
 
             <div className="hidden lg:flex items-center gap-3 w-[25%] justify-end">
                 {/* <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" /> */}
-                <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.mic_icon} alt="" />
+                <div className="relative flex items-center gap-1">
+                    <svg 
+                        onClick={() => toggleLike(track.id)}
+                        onMouseEnter={() => setShowLikeCount(true)}
+                        onMouseLeave={() => setShowLikeCount(false)}
+                        className={`w-5 h-5 cursor-pointer hover:scale-110 transition-all ${
+                            isLiked(track.id) ? 'fill-green-500 text-green-500' : 'fill-none text-white hover:text-green-400'
+                        }`}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                    >
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    {showLikeCount && (
+                        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {getLikeCount(track.id)} {getLikeCount(track.id) === 1 ? 'like' : 'likes'}
+                        </span>
+                    )}
+                </div>
                 <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.queue_icon} alt="" />
                 <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 cursor-pointer hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">

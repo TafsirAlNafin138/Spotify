@@ -21,6 +21,23 @@ const PlayerContextProvider = (props) => {
 
     const [queue, setQueue] = useState([]);
     const [isQueueOpen, setIsQueueOpen] = useState(false);
+    const [likedSongs, setLikedSongs] = useState({});
+    const [songLikes, setSongLikes] = useState(() => {
+        const initial = {};
+        songsData.forEach((song, idx) => {
+            const key = song?.id ?? idx;
+            initial[key] = 0;
+        });
+        return initial;
+    });
+    const [followedArtists, setFollowedArtists] = useState(() => {
+        const saved = localStorage.getItem('spotifyFollowedArtists');
+        return saved ? JSON.parse(saved) : {};
+    });
+    const [artistFollowers, setArtistFollowers] = useState(() => {
+        const saved = localStorage.getItem('spotifyArtistFollowers');
+        return saved ? JSON.parse(saved) : {};
+    });
 
 
     const audioRef = useRef();
@@ -184,6 +201,72 @@ const PlayerContextProvider = (props) => {
         setPlayerState(false);
     }
 
+    const toggleLike = (songId) => {
+        setLikedSongs(prev => {
+            const liked = !prev[songId];
+            setSongLikes(p => ({
+                ...p,
+                [songId]:  (songLikes[songId] > 0 ? songLikes[songId] : 0) + (liked ? 1 : -1),
+            }));
+            return { ...prev, [songId]: liked };
+        });
+    }
+
+    // // Save liked songs to localStorage whenever they change
+    // useEffect(() => {
+    //     localStorage.setItem('spotifyLikedSongs', JSON.stringify(likedSongs));
+    // }, [likedSongs]);
+
+    // // Save song likes count to localStorage whenever they change
+    // useEffect(() => {
+    //     localStorage.setItem('spotifySongLikes', JSON.stringify(songLikes));
+    // }, [songLikes]);
+
+    const isLiked = (songId) => {
+        return likedSongs[songId] || false;
+    }
+
+    const getLikeCount = (songId) => {
+        return songLikes[songId] || 0;
+    }
+
+    // ==================== FOLLOW FUNCTIONALITY ====================
+    
+    const toggleFollow = (artistId) => {
+        setFollowedArtists(prev => {
+            const isCurrentlyFollowing = !prev[artistId];
+            
+            // Update follower count based on current state
+            setArtistFollowers(prevFollowers => ({
+                ...prevFollowers,
+                [artistId]: artistFollowers[artistId] +(isCurrentlyFollowing ? 1 : -1)
+            }));
+            
+            return {
+                ...prev,
+                [artistId]: isCurrentlyFollowing
+            };
+        });
+    }
+
+    const isFollowing = (artistId) => {
+        return followedArtists[artistId] || false;
+    }
+
+    const getFollowerCount = (artistId) => {
+        return artistFollowers[artistId] || 0;
+    }
+
+    // Save followed artists to localStorage
+    useEffect(() => {
+        localStorage.setItem('spotifyFollowedArtists', JSON.stringify(followedArtists));
+    }, [followedArtists]);
+
+    // Save artist followers count to localStorage
+    useEffect(() => {
+        localStorage.setItem('spotifyArtistFollowers', JSON.stringify(artistFollowers));
+    }, [artistFollowers]);
+
     const contextValue = {
         // Add state and functions related to the player here
         audioRef,
@@ -205,7 +288,13 @@ const PlayerContextProvider = (props) => {
         speakerseek,
         volumeBg,
         volumeBar,
-        loopSeek
+        loopSeek,
+        toggleLike,
+        isLiked,
+        getLikeCount,
+        toggleFollow,
+        isFollowing,
+        getFollowerCount
     };
 
     return (
