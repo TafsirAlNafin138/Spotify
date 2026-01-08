@@ -38,7 +38,7 @@ const Sidebar = () => {
                         Create Playlist
                     </button>
                 </div>
-                <div className='p-4 bg-zinc-800 m-2 rounded font-semibold flex flex-col items-start justify-start gap-1 pl-4'>
+                {/* <div className='p-4 bg-zinc-800 m-2 rounded font-semibold flex flex-col items-start justify-start gap-1 pl-4'>
                     <h1>
                         Find Podcasts You Love
                     </h1>
@@ -48,7 +48,7 @@ const Sidebar = () => {
                     <button className='bg-white text-black px-4 py-1 mt-2 rounded-full font-bold'>
                         Browse Podcasts
                     </button>
-                </div>
+                </div> */}
             </div>
         </div>
     )

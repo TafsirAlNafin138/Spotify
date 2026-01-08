@@ -14,6 +14,7 @@
   "type": "module",
   "dependencies": {
     "@arcjet/node": "^1.0.0-beta.16",
+    "@clerk/express": "^1.7.61",
     "@neondatabase/serverless": "^1.0.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
