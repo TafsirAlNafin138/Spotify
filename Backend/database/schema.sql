@@ -1,26 +1,90 @@
-// database.js
-const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
+-- DROP TABLE IF EXISTS likes CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS followers CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS playlist_tracks CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS playlists CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS tracks CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS albums CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS artists CASCADE CONSTRAINTS;
+-- DROP TABLE IF EXISTS users CASCADE CONSTRAINTS;
 
-// Execute schema on first connection (optional, for development)
-const initializeDatabase = async () => {
-    try {
-        const schemaPath = path.join(__dirname, 'schema.sql');
-        const schema = fs.readFileSync(schemaPath, 'utf8');
-        await pool.query(schema);
-        console.log('Database schema initialized');
-    } catch (error) {
-        console.error('Schema initialization error:', error);
-    }
-};
+-- Users Table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(50) NOT NULL,
+    date_of_birth DATE,
+    profile_image VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-// Uncomment to run on startup
-// initializeDatabase();
+-- Artists Table
+CREATE TABLE artists (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    genre VARCHAR(50),
+    bio TEXT,
+    image VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-module.exports = { pool, initializeDatabase };
+-- Albums Table
+CREATE TABLE albums (
+    id SERIAL PRIMARY KEY,
+    artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    release_date DATE,
+    image VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tracks Table
+CREATE TABLE tracks (
+    id SERIAL PRIMARY KEY,
+    album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    duration INTEGER NOT NULL,
+    path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Playlists Table
+CREATE TABLE playlists (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    image VARCHAR(255),
+    is_public BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Playlist Tracks Junction Table
+CREATE TABLE playlist_tracks (
+    playlist_id INTEGER REFERENCES playlists(id) ON DELETE CASCADE,
+    track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+    track_order INTEGER NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (playlist_id, track_id)
+);
+
+-- Followers Junction Table
+CREATE TABLE followers (
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+    followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, artist_id)
+);
+
+-- Likes Junction Table
+CREATE TABLE likes (
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+    like_date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, track_id)
+);
