@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Define your database schema here
+
+model User {
+  id            Int        @id @default(autoincrement())
+  name          String     @db.VarChar(50)
+  email         String     @unique @db.VarChar(50)
+  password      String     @db.VarChar(50)
+  dateOfBirth   DateTime?  @map("date_of_birth") @db.Date
+  profileImage  String?    @map("profile_image") @db.VarChar(255)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  
+  playlists     Playlist[]
+  followers     Follower[]
+  likes         Like[]
+
+  @@map("users")
+}
+
+model Artist {
+  id        Int        @id @default(autoincrement())
+  name      String     @db.VarChar(50)
+  genre     String?    @db.VarChar(50)
+  bio       String?    @db.Text
+  image     String    @db.VarChar(255)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  
+  albums    Album[]
+  followers Follower[]
+
+  @@map("artists")
+}
+
+model Album {
+  id          Int       @id @default(autoincrement())
+  artistId    Int       @map("artist_id")
+  name        String    @db.VarChar(50)
+  releaseDate DateTime @map("release_date") @db.Date
+  image       String   @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  
+  artist      Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tracks      Track[]
+
+  @@map("albums")
+}
+
+model Track {
+  id        Int       @id @default(autoincrement())
+  albumId   Int       @map("album_id")
+  name      String    @db.VarChar(50)
+  duration  Int
+  path      String   @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  
+  album           Album           @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  playlistTracks  PlaylistTrack[]
+  likes           Like[]
+
+  @@map("tracks")
+}
+
+model Playlist {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  name      String    @db.VarChar(50)
+  image     String?   @db.VarChar(255)
+  isPublic  Boolean   @default(false) @map("is_public")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistTracks PlaylistTrack[]
+
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  playlistId Int      @map("playlist_id")
+  trackId    Int      @map("track_id")
+  trackOrder Int      @map("track_order")
+  addedAt    DateTime @default(now()) @map("added_at") @db.Timestamp(6)
+  
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, trackId])
+  @@map("playlist_tracks")
+}
+
+model Follower {
+  userId     Int      @map("user_id")
+  artistId   Int      @map("artist_id")
+  followedAt DateTime @default(now()) @map("followed_at") @db.Timestamp(6)
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artist     Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@id([userId, artistId])
+  @@map("followers")
+}
+
+model Like {
+  userId       Int      @map("user_id")
+  trackId      Int      @map("track_id")
+  likeDateTime DateTime @default(now()) @map("like_date_time") @db.Timestamp(6)
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track        Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@id([userId, trackId])
+  @@map("likes")
+}
