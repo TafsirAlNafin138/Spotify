@@ -1,8 +1,7 @@
-console.log("This is my Kingdom");
-require("dotenv").config();
-const express = require("express");
+import express from 'express';
+import 'dotenv/config'; 
 const app = express();
-
+console.log("This is my Kingdom");
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
