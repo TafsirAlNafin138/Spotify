@@ -14,6 +14,7 @@ let sql;
 try{
   sql = neon(process.env.DATABASE_URL);
   return ApiResponse.success(200, "Database connected successfully");
+  console.log(sql);
 }catch(err){
   throw new ApiError(500, "Database connection failed");
 }
