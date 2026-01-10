@@ -25,7 +25,7 @@ CREATE TABLE users (
   name VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(100) NOT NULL,
-  track_clerk_id VARCHAR(255) NOT NULL,
+  track_clerk_id VARCHAR(255) UNIQUE NOT NULL
   date_of_birth DATE,
   image VARCHAR(255),
   created_at TIMESTAMP DEFAULT NOW(),
@@ -218,3 +218,6 @@ CREATE INDEX idx_listening_history_user_id ON listening_history(user_id);
 CREATE INDEX idx_listening_history_track_id ON listening_history(track_id);
 CREATE INDEX idx_listening_history_episode_id ON listening_history(episode_id);
 CREATE INDEX idx_genres_name ON genres(name);
+
+ALTER TABLE "listening_history" ADD CONSTRAINT "track_or_episode_check" 
+CHECK ((track_id IS NOT NULL AND episode_id IS NULL) OR (track_id IS NULL AND episode_id IS NOT NULL));
