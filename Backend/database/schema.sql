@@ -1,23 +1,25 @@
 -- PostgreSQL Schema for Music Streaming Platform
--- Generated from DBML schema
+-- Complete version with auto-update triggers and all fixes
 
 -- Drop tables if they exist (in reverse order of dependencies)
-DROP TABLE IF EXISTS listening_history CASCADE;
-DROP TABLE IF EXISTS podcast_followers CASCADE;
-DROP TABLE IF EXISTS episodes CASCADE;
-DROP TABLE IF EXISTS podcasts CASCADE;
-DROP TABLE IF EXISTS album_genres CASCADE;
-DROP TABLE IF EXISTS track_genres CASCADE;
-DROP TABLE IF EXISTS genres CASCADE;
-DROP TABLE IF EXISTS likes CASCADE;
-DROP TABLE IF EXISTS followers CASCADE;
-DROP TABLE IF EXISTS playlist_tracks CASCADE;
-DROP TABLE IF EXISTS playlists CASCADE;
-DROP TABLE IF EXISTS track_artists CASCADE;
-DROP TABLE IF EXISTS tracks CASCADE;
-DROP TABLE IF EXISTS albums CASCADE;
-DROP TABLE IF EXISTS artists CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- DROP TABLE IF EXISTS listening_history CASCADE;
+-- DROP TABLE IF EXISTS podcast_followers CASCADE;
+-- DROP TABLE IF EXISTS episodes CASCADE;
+-- DROP TABLE IF EXISTS podcasts CASCADE;
+-- DROP TABLE IF EXISTS album_genres CASCADE;
+-- DROP TABLE IF EXISTS track_genres CASCADE;
+-- DROP TABLE IF EXISTS genres CASCADE;
+-- DROP TABLE IF EXISTS likes CASCADE;
+-- DROP TABLE IF EXISTS followers CASCADE;
+-- DROP TABLE IF EXISTS playlist_tracks CASCADE;
+-- DROP TABLE IF EXISTS playlists CASCADE;
+-- DROP TABLE IF EXISTS track_artists CASCADE;
+-- DROP TABLE IF EXISTS tracks CASCADE;
+-- DROP TABLE IF EXISTS albums CASCADE;
+-- DROP TABLE IF EXISTS artists CASCADE;
+-- DROP TABLE IF EXISTS users CASCADE;
+-- DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+
 
 -- 1. Users Table
 CREATE TABLE users (
@@ -25,11 +27,11 @@ CREATE TABLE users (
   name VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(100) NOT NULL,
-  track_clerk_id VARCHAR(255) UNIQUE NOT NULL
+  track_clerk_id VARCHAR(255) NOT NULL UNIQUE,
   date_of_birth DATE,
   image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Artists Table
@@ -38,8 +40,8 @@ CREATE TABLE artists (
   name VARCHAR(50) NOT NULL,
   bio TEXT,
   image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. Albums Table
@@ -48,8 +50,8 @@ CREATE TABLE albums (
   artist_id INTEGER,
   name VARCHAR(50) NOT NULL,
   image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
 );
 
@@ -59,13 +61,15 @@ CREATE TABLE tracks (
   album_id INTEGER,
   artist_id INTEGER NOT NULL,
   name VARCHAR(50) NOT NULL,
+  track_number INTEGER NOT NULL,
+  disc_number INTEGER NOT NULL DEFAULT 1,
   duration INTEGER NOT NULL,
   path VARCHAR(255),
   image VARCHAR(255),
   is_explicit BOOLEAN DEFAULT FALSE,
   play_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE SET NULL,
   FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
 );
@@ -90,8 +94,8 @@ CREATE TABLE playlists (
   user_id INTEGER,
   name VARCHAR(50) NOT NULL,
   image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -100,7 +104,7 @@ CREATE TABLE playlist_tracks (
   playlist_id INTEGER,
   track_id INTEGER,
   track_order INTEGER,
-  added_at TIMESTAMP DEFAULT NOW(),
+  added_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (playlist_id, track_id),
   FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
   FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
@@ -119,7 +123,7 @@ CREATE TABLE followers (
 CREATE TABLE likes (
   user_id INTEGER,
   track_id INTEGER,
-  like_date_time TIMESTAMP,
+  like_date_time TIMESTAMP(3),
   PRIMARY KEY (user_id, track_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
@@ -129,7 +133,7 @@ CREATE TABLE likes (
 CREATE TABLE genres (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 11. Track Genres (Many-to-Many)
@@ -157,8 +161,8 @@ CREATE TABLE podcasts (
   host_name VARCHAR(100),
   description TEXT,
   cover_image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 14. Episodes Table
@@ -169,9 +173,9 @@ CREATE TABLE episodes (
   description TEXT,
   duration INTEGER,
   audio_path VARCHAR(255),
-  release_date TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
+  release_date TIMESTAMP(3),
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE CASCADE
 );
 
@@ -179,7 +183,7 @@ CREATE TABLE episodes (
 CREATE TABLE podcast_followers (
   user_id INTEGER,
   podcast_id INTEGER,
-  followed_at TIMESTAMP DEFAULT NOW(),
+  followed_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, podcast_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (podcast_id) REFERENCES podcasts(id) ON DELETE CASCADE
@@ -193,22 +197,23 @@ CREATE TABLE listening_history (
   episode_id INTEGER,
   progress_seconds INTEGER,
   is_completed BOOLEAN DEFAULT FALSE,
-  last_played_at TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
+  last_played_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE,
   FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE,
-  CHECK (
+  CONSTRAINT track_or_episode_check CHECK (
     (track_id IS NOT NULL AND episode_id IS NULL) OR 
     (track_id IS NULL AND episode_id IS NOT NULL)
   )
 );
 
-COMMENT ON COLUMN listening_history.track_id IS 'Nullable: Filled if listening to a song';
-COMMENT ON COLUMN listening_history.episode_id IS 'Nullable: Filled if listening to a podcast';
-COMMENT ON COLUMN listening_history.progress_seconds IS 'Where the user left off';
 
--- Create indexes for better query performance
+
+-- ============================================================================
+-- Indexes
+-- ============================================================================
+
 CREATE INDEX idx_albums_artist_id ON albums(artist_id);
 CREATE INDEX idx_tracks_album_id ON tracks(album_id);
 CREATE INDEX idx_tracks_artist_id ON tracks(artist_id);
@@ -219,5 +224,55 @@ CREATE INDEX idx_listening_history_track_id ON listening_history(track_id);
 CREATE INDEX idx_listening_history_episode_id ON listening_history(episode_id);
 CREATE INDEX idx_genres_name ON genres(name);
 
-ALTER TABLE "listening_history" ADD CONSTRAINT "track_or_episode_check" 
-CHECK ((track_id IS NOT NULL AND episode_id IS NULL) OR (track_id IS NULL AND episode_id IS NOT NULL));
+-- ============================================================================
+-- auto-update updated_at TRIGGER FUNCTION
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- ============================================================================
+-- Triggers to auto-update updated_at columns
+-- ============================================================================
+
+CREATE TRIGGER update_users_updated_at 
+    BEFORE UPDATE ON users
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_artists_updated_at 
+    BEFORE UPDATE ON artists
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_albums_updated_at 
+    BEFORE UPDATE ON albums
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_tracks_updated_at 
+    BEFORE UPDATE ON tracks
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_playlists_updated_at 
+    BEFORE UPDATE ON playlists
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_podcasts_updated_at 
+    BEFORE UPDATE ON podcasts
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_episodes_updated_at 
+    BEFORE UPDATE ON episodes
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
