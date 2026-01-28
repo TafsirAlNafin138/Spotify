@@ -3,11 +3,12 @@ import Sidebar from "./components/sidebar";
 import Player from "./components/player";
 import Display from "./components/display";
 import { PlayerContext } from "./contexts/PlayerContext.jsx";
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
+import axios from 'axios';
 
 export default function App() {
 
-  const {audioRef, track, playerState} = React.useContext(PlayerContext);
+  const { audioRef, track, playerState } = React.useContext(PlayerContext);
 
   useEffect(() => {
     if (audioRef.current && track.file) {
@@ -17,9 +18,36 @@ export default function App() {
         audioRef.current.play().catch(err => console.error("Play failed:", err));
       }
     }
-  // only run when the track changes — don't run on play/pause to avoid resetting currentTime
+    // only run when the track changes — don't run on play/pause to avoid resetting currentTime
   }, [track.file, track]);
-  
+
+  const { user } = useUser();
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const syncUser = async () => {
+        try {
+          const token = await getToken();
+          await axios.post('http://localhost:5000/api/auth/callback', {
+            id: user.id,
+            email_addresses: user.emailAddresses,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            image_url: user.imageUrl,
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+        } catch (error) {
+          console.error("Error syncing user:", error);
+        }
+      };
+      syncUser();
+    }
+  }, [user]);
+
   return (
     <>
       <SignedOut>
@@ -34,7 +62,7 @@ export default function App() {
           </div>
         </div>
       </SignedOut>
-      
+
       <SignedIn>
         <div className="h-screen bg-neutral-900 flex flex-col">
           <div className="absolute top-4 right-4 z-50">
@@ -49,5 +77,5 @@ export default function App() {
         </div>
       </SignedIn>
     </>
-  ); 
+  );
 }

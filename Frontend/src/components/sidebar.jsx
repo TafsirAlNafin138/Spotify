@@ -48,7 +48,7 @@ const Sidebar = () => {
                     <button className='bg-white text-black px-4 py-1 mt-2 rounded-full font-bold'>
                         Browse Podcasts
                     </button>
-                </div> */}
+                </div> */}  
             </div>
         </div>
     )

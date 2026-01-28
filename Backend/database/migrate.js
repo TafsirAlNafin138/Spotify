@@ -1,24 +1,12 @@
--- Enable UUID extension if you ever want to switch from Integers
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+import pool from '../config/database.js'
 
--- ========================================
--- FUNCTIONS & TRIGGERS
--- ========================================
+async function setupDatabase() {
+    // Option A: Read from a .sql file
+    // const sql = fs.readFileSync(path.join(__dirname, 'schema.sql')).toString();
 
--- Automatically update the updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- ========================================
--- CORE TABLES
--- ========================================
-
-CREATE TABLE users (
+    // Option B: Paste the string directly (truncated for example)
+    const sql = `
+    CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
@@ -75,11 +63,6 @@ CREATE TABLE track_artists (
   artist_role VARCHAR(50), -- e.g., 'Primary', 'Featured', 'Producer'
   PRIMARY KEY (track_id, artist_id)
 );
-
--- ========================================
--- USER INTERACTION TABLES
--- ========================================
-
 CREATE TABLE playlists (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -111,10 +94,6 @@ CREATE TABLE likes (
   PRIMARY KEY (user_id, track_id)
 );
 
--- ========================================
--- CATEGORIZATION
--- ========================================
-
 CREATE TABLE genres (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL,
@@ -132,10 +111,6 @@ CREATE TABLE album_genres (
   genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
   PRIMARY KEY (album_id, genre_id)
 );
-
--- ========================================
--- PODCASTS
--- ========================================
 
 CREATE TABLE podcasts (
   id SERIAL PRIMARY KEY,
@@ -166,10 +141,6 @@ CREATE TABLE podcast_followers (
   PRIMARY KEY (user_id, podcast_id)
 );
 
--- ========================================
--- LISTENING HISTORY
--- ========================================
-
 CREATE TABLE listening_history_tracks (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -192,10 +163,6 @@ CREATE TABLE listening_history_episodes (
   UNIQUE (user_id, episode_id)
 );
 
--- ========================================
--- ADMIN TABLES
--- ========================================
-
 CREATE TABLE super_admins (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -217,3 +184,17 @@ CREATE TABLE admin_audit_logs (
   ip_address VARCHAR(45),
   created_at TIMESTAMP DEFAULT NOW()
 );
+  `;
+
+    try {
+        console.log("Creating tables in Neon...");
+        await pool.query(sql);
+        console.log("✅ Database schema created successfully!");
+    } catch (err) {
+        console.error("❌ Error creating tables:", err);
+    } finally {
+        process.exit();
+    }
+}
+
+setupDatabase();

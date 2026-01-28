@@ -1,21 +1,26 @@
 import express from 'express';
-import 'dotenv/config'; 
+import 'dotenv/config';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import { clerkMiddleware,  requireAuth, getAuth } from '@clerk/express'
+import { clerkMiddleware, requireAuth, getAuth } from '@clerk/express'
 
 const app = express();
 console.log("This is my Kingdom");
 
+import authRoutes from './routes/auth.route.js';
+
 app.use(helmet());
 app.use(cors());
 app.use(morgan());
-app.use(express.json({limit: '10mb'}));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 app.use(cookieParser());
+
+app.use('/api/auth', authRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
