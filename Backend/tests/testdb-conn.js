@@ -23,9 +23,9 @@ try {
 
   await client.connect();
   const res = await client.query('SELECT 1');
-  console.log('✅ Connected:', res.rows);
+  console.log('Connected:', res.rows);
 } catch (err) {
-  console.error('❌ Connection failed:', err);
+  console.error('Connection failed:', err);
 } finally {
   await client.end();
 }
