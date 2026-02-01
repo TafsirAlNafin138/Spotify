@@ -27,7 +27,7 @@ CREATE TABLE albums (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE album_artists (
+CREATE TABLE album_author (
   album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
   artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
   is_primary BOOLEAN DEFAULT true,
