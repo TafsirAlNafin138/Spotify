@@ -1,23 +1,3 @@
--- Enable UUID extension if you ever want to switch from Integers
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ========================================
--- FUNCTIONS & TRIGGERS
--- ========================================
-
--- Automatically update the updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- ========================================
--- CORE TABLES
--- ========================================
-
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -76,9 +56,8 @@ CREATE TABLE track_artists (
   PRIMARY KEY (track_id, artist_id)
 );
 
--- ========================================
--- USER INTERACTION TABLES
--- ========================================
+
+-- User Interaction Tables
 
 CREATE TABLE playlists (
   id SERIAL PRIMARY KEY,
@@ -111,9 +90,8 @@ CREATE TABLE likes (
   PRIMARY KEY (user_id, track_id)
 );
 
--- ========================================
--- CATEGORIZATION
--- ========================================
+
+-- Categorization
 
 CREATE TABLE genres (
   id SERIAL PRIMARY KEY,
@@ -133,9 +111,8 @@ CREATE TABLE album_genres (
   PRIMARY KEY (album_id, genre_id)
 );
 
--- ========================================
--- PODCASTS
--- ========================================
+
+-- Podcasts
 
 CREATE TABLE podcasts (
   id SERIAL PRIMARY KEY,
@@ -166,9 +143,7 @@ CREATE TABLE podcast_followers (
   PRIMARY KEY (user_id, podcast_id)
 );
 
--- ========================================
--- LISTENING HISTORY
--- ========================================
+-- Listening History
 
 CREATE TABLE listening_history_tracks (
   id SERIAL PRIMARY KEY,
@@ -192,9 +167,7 @@ CREATE TABLE listening_history_episodes (
   UNIQUE (user_id, episode_id)
 );
 
--- ========================================
--- ADMIN TABLES
--- ========================================
+-- Admin Tables
 
 CREATE TABLE super_admins (
   id SERIAL PRIMARY KEY,

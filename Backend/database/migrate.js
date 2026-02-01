@@ -1,10 +1,6 @@
 import pool from '../config/database.js'
 
 async function setupDatabase() {
-    // Option A: Read from a .sql file
-    // const sql = fs.readFileSync(path.join(__dirname, 'schema.sql')).toString();
-
-    // Option B: Paste the string directly (truncated for example)
     const sql = `
     CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -35,7 +31,7 @@ CREATE TABLE albums (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE album_artists (
+CREATE TABLE album_authors (
   album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
   artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
   is_primary BOOLEAN DEFAULT true,
@@ -187,11 +183,10 @@ CREATE TABLE admin_audit_logs (
   `;
 
     try {
-        console.log("Creating tables in Neon...");
         await pool.query(sql);
-        console.log("✅ Database schema created successfully!");
+        console.log("Successful");
     } catch (err) {
-        console.error("❌ Error creating tables:", err);
+        console.error(err);
     } finally {
         process.exit();
     }
