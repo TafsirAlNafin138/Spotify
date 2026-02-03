@@ -150,7 +150,7 @@ async function testInsert() {
         );
 
         const result19 = await pool.query(
-            `INSERT INTO album_artists (album_id, artist_id, is_primary) 
+            `INSERT INTO album_authors (album_id, artist_id, is_primary) 
            VALUES ($1, $2, $3) 
            ON CONFLICT (album_id, artist_id) DO NOTHING
            RETURNING *`,

@@ -70,6 +70,14 @@ class User {
     );
     return result.rows[0];
   }
+
+  // Get total count of users
+  static async count() {
+    const result = await db.query(
+      'SELECT COUNT(*) as count FROM users'
+    );
+    return parseInt(result.rows[0].count);
+  }
 }
 
 export default User;

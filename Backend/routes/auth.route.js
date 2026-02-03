@@ -4,6 +4,6 @@ import { authCallback } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
-router.post('/callback', authCallback);
+router.post('/sign-up', authCallback);
 
 export default router;
