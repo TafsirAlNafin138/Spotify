@@ -6,7 +6,7 @@ const PlayerContextProvider = (props) => {
 
     const [track, setTrack] = useState(songsData[0]);
     const [playerState, setPlayerState] = useState(false); // false - paused, true - playing
-    const[trackProgress, setTrackProgress] = useState({  // song player progress in seconds and minutes
+    const [trackProgress, setTrackProgress] = useState({  // song player progress in seconds and minutes
         currentTime: {
             seconds: 0,
             minutes: 0
@@ -47,74 +47,74 @@ const PlayerContextProvider = (props) => {
     const volumeBar = useRef();
 
 
-//     const fetchSong = async (id) => {
-//   const res = await fetch(`/api/songs/${id}`);
-//   return await res.json();
-// };
+    //     const fetchSong = async (id) => {
+    //   const res = await fetch(`/api/songs/${id}`);
+    //   return await res.json();
+    // };
 
-// const playWithId = async (id) => {
-//   const song = await fetchSong(id);
-//   setTrack(song);
-//   audioRef.current.src = song.url; // set new source
-//   await new Promise((resolve) => {
-//     audioRef.current.onloadedmetadata = resolve;
-//   });
-//   await audioRef.current.play();
-//   setPlayerState(true);
-// };
-   
-//    const parsetimeStringToSeconds = (str) => {
-//      const parts = str.split(":").map(Number);
-//      if (parts.length === 1) return parts[0] || 0;
-//      if (parts.length === 2) return parts[0] * 60 + (parts[1] || 0);
-//      const [h, m, s] = parts.slice(-3);
-//      return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-//    };
+    // const playWithId = async (id) => {
+    //   const song = await fetchSong(id);
+    //   setTrack(song);
+    //   audioRef.current.src = song.url; // set new source
+    //   await new Promise((resolve) => {
+    //     audioRef.current.onloadedmetadata = resolve;
+    //   });
+    //   await audioRef.current.play();
+    //   setPlayerState(true);
+    // };
+
+    //    const parsetimeStringToSeconds = (str) => {
+    //      const parts = str.split(":").map(Number);
+    //      if (parts.length === 1) return parts[0] || 0;
+    //      if (parts.length === 2) return parts[0] * 60 + (parts[1] || 0);
+    //      const [h, m, s] = parts.slice(-3);
+    //      return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+    //    };
 
     const playWithId = async (id) => {
-            setTrack(songsData[id]);
-            await audioRef.current.play();
-            setTrackProgress({
-                currentTime: {
-                    seconds: 0,
-                    minutes: 0
-                },
-                duration: {
-                    seconds: 0,
-                    minutes: 0
-                }
-            });
-            seekBar.current.style.width = `0%`;
-            seekBg.current.style.width = `0%`;
-            setPlayerState(true);
-        }
+        setTrack(songsData[id]);
+        await audioRef.current.play();
+        setTrackProgress({
+            currentTime: {
+                seconds: 0,
+                minutes: 0
+            },
+            duration: {
+                seconds: 0,
+                minutes: 0
+            }
+        });
+        seekBar.current.style.width = `0%`;
+        seekBg.current.style.width = `0%`;
+        setPlayerState(true);
+    }
     const prevTrack = () => {
         let prevId = track.id - 1;
         if (prevId < 0) prevId = songsData.length - 1;
         playWithId(prevId);
-    }  
+    }
     const nextTrack = () => {
         let nextId = track.id + 1;
         if (nextId >= songsData.length) nextId = 0;
         playWithId(nextId);
-    }  
+    }
 
 
     const seekSong = async (e) => {
         if (!seekBg.current || !audioRef.current) return;
 
-//         if (isNaN(audioRef.current.duration)) {
-//     await new Promise((res) => {
-//       audioRef.current.onloadedmetadata = res;
-//     });
-//   }
-        
+        //         if (isNaN(audioRef.current.duration)) {
+        //     await new Promise((res) => {
+        //       audioRef.current.onloadedmetadata = res;
+        //     });
+        //   }
+
         const seekBarWidth = seekBg.current.clientWidth;
         const clickX = e.nativeEvent.offsetX;
         const duration = audioRef.current.duration;
-        
+
         if (isNaN(duration) || duration <= 0) return;
-        
+
         audioRef.current.currentTime = (clickX / seekBarWidth) * duration;
     }
 
@@ -160,33 +160,33 @@ const PlayerContextProvider = (props) => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-        if (audioRef.current) {
-            audioRef.current.ontimeupdate = () => {
-                const currentTime = audioRef.current.currentTime;
-                const duration = audioRef.current.duration;
-                
-                if (!isNaN(duration) && duration > 0) {
-                    setTrackProgress({
-                        currentTime: {
-                            seconds: Math.floor(currentTime % 60),
-                            minutes: Math.floor(currentTime / 60)
-                        },
-                        duration: {
-                            seconds: Math.floor(duration % 60),
-                            minutes: Math.floor(duration / 60)
-                        }
-                    });
+            if (audioRef.current) {
+                audioRef.current.ontimeupdate = () => {
+                    const currentTime = audioRef.current.currentTime;
+                    const duration = audioRef.current.duration;
 
-                    // Update seek bar
-                    if (seekBar.current && seekBg.current) {
-                        seekBar.current.style.width = `${(currentTime / duration) * 100}%`;
+                    if (!isNaN(duration) && duration > 0) {
+                        setTrackProgress({
+                            currentTime: {
+                                seconds: Math.floor(currentTime % 60),
+                                minutes: Math.floor(currentTime / 60)
+                            },
+                            duration: {
+                                seconds: Math.floor(duration % 60),
+                                minutes: Math.floor(duration / 60)
+                            }
+                        });
+
+                        // Update seek bar
+                        if (seekBar.current && seekBg.current) {
+                            seekBar.current.style.width = `${(currentTime / duration) * 100}%`;
+                        }
                     }
-                }
-            };
-    }
-}
-, 1000);
-        
+                };
+            }
+        }
+            , 1000);
+
         // return () => clearTimeout(timer);
     }, [audioRef, track, setTrack, playerState, playWithId, setPlayerState]);
 
@@ -206,7 +206,7 @@ const PlayerContextProvider = (props) => {
             const liked = !prev[songId];
             setSongLikes(p => ({
                 ...p,
-                [songId]:  (songLikes[songId] > 0 ? songLikes[songId] : 0) + (liked ? 1 : -1),
+                [songId]: (songLikes[songId] > 0 ? songLikes[songId] : 0) + (liked ? 1 : -1),
             }));
             return { ...prev, [songId]: liked };
         });
@@ -231,17 +231,17 @@ const PlayerContextProvider = (props) => {
     }
 
     // ==================== FOLLOW FUNCTIONALITY ====================
-    
+
     const toggleFollow = (artistId) => {
         setFollowedArtists(prev => {
             const isCurrentlyFollowing = !prev[artistId];
-            
+
             // Update follower count based on current state
             setArtistFollowers(prevFollowers => ({
                 ...prevFollowers,
-                [artistId]: artistFollowers[artistId] +(isCurrentlyFollowing ? 1 : -1)
+                [artistId]: artistFollowers[artistId] + (isCurrentlyFollowing ? 1 : -1)
             }));
-            
+
             return {
                 ...prev,
                 [artistId]: isCurrentlyFollowing

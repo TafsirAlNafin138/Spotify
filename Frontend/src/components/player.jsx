@@ -3,10 +3,10 @@ import { assets, songsData } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const Player = () => {
-    const {seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong, volumeSeek, speakerseek, volumeBg, volumeBar, loopSeek, toggleLike, isLiked, getLikeCount} = React.useContext(PlayerContext);
-    
+    const { seekBg, seekBar, playerState, play, pause, track, trackProgress, prevTrack, nextTrack, seekSong, volumeSeek, speakerseek, volumeBg, volumeBar, loopSeek, toggleLike, isLiked, getLikeCount } = React.useContext(PlayerContext);
+
     const [showLikeCount, setShowLikeCount] = React.useState(false);
-    
+
     const toggleMiniPlayer = () => {
         const player = document.querySelector('.h-\\[12\\%\\]');
         if (player) {
@@ -47,10 +47,10 @@ const Player = () => {
                 <div className="flex items-center gap-4">
                     <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.shuffle_icon} alt="" />
                     <img onClick={prevTrack} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.prev_icon} alt="" />
-                    {playerState ? 
-                    <img onClick={pause} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.pause_icon} alt="Pause" /> 
-                    : 
-                    <img onClick={play} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.play_icon} alt="Play" />
+                    {playerState ?
+                        <img onClick={pause} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.pause_icon} alt="Pause" />
+                        :
+                        <img onClick={play} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.play_icon} alt="Play" />
                     }
                     <img onClick={nextTrack} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.next_icon} alt="" />
                     <img onClick={loopSeek} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.loop_icon} alt="" />
@@ -59,7 +59,7 @@ const Player = () => {
                 <div className="flex items-center gap-3 w-full">
                     <p className="text-xs text-gray-400">{`${trackProgress.currentTime.minutes}:${trackProgress.currentTime.seconds}`}</p>
                     <div ref={seekBg} onClick={seekSong} className="flex-1 bg-gray-700 h-1 rounded-full cursor-pointer group relative">
-                        <hr ref={seekBar} className="h-1 border-none bg-green-500 rounded-full group-hover:bg-green-400 transition-all absolute top-0 left-0" style={{width: `${(trackProgress.currentTime.minutes * 60 + trackProgress.currentTime.seconds) / (trackProgress.duration.minutes * 60 + trackProgress.duration.seconds) * 100}%`}} />
+                        <hr ref={seekBar} className="h-1 border-none bg-green-500 rounded-full group-hover:bg-green-400 transition-all absolute top-0 left-0" style={{ width: `${(trackProgress.currentTime.minutes * 60 + trackProgress.currentTime.seconds) / (trackProgress.duration.minutes * 60 + trackProgress.duration.seconds) * 100}%` }} />
                     </div>
                     <p className="text-xs text-gray-400">{`${trackProgress.duration.minutes}:${trackProgress.duration.seconds}`}</p>
                 </div>
@@ -68,13 +68,12 @@ const Player = () => {
             <div className="hidden lg:flex items-center gap-3 w-[25%] justify-end">
                 {/* <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" /> */}
                 <div className="relative flex items-center gap-1">
-                    <svg 
+                    <svg
                         onClick={() => toggleLike(track.id)}
                         onMouseEnter={() => setShowLikeCount(true)}
                         onMouseLeave={() => setShowLikeCount(false)}
-                        className={`w-5 h-5 cursor-pointer hover:scale-110 transition-all ${
-                            isLiked(track.id) ? 'fill-green-500 text-green-500' : 'fill-none text-white hover:text-green-400'
-                        }`}
+                        className={`w-5 h-5 cursor-pointer hover:scale-110 transition-all ${isLiked(track.id) ? 'fill-green-500 text-green-500' : 'fill-none text-white hover:text-green-400'
+                            }`}
                         stroke="currentColor"
                         strokeWidth="2"
                         viewBox="0 0 24 24"
@@ -90,7 +89,7 @@ const Player = () => {
                 <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.queue_icon} alt="" />
                 <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 cursor-pointer hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                     </svg>
                     <div ref={volumeBg} onClick={speakerseek} className="w-24 bg-gray-700 h-1 rounded-full cursor-pointer group relative">
                         <hr ref={volumeBar} onClick={volumeSeek} className="h-1 border-none bg-white rounded-full group-hover:bg-green-500 transition-all absolute top-0 left-0" />

@@ -33,6 +33,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
+    "svix": "^1.84.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

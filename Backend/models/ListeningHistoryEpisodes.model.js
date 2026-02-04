@@ -42,7 +42,7 @@ class ListeningHistoryEpisode {
     }
 
     // Get recently played episodes
-    static async getRecentlyPlayed(userId, limit = 20) {
+    static async getRecentlyPlayed(userId, limit = 6) {
         const result = await db.query(
             `SELECT lhe.*, e.title, e.duration, e.audio_path, p.title as podcast_title, p.cover_image
        FROM listening_history_episodes lhe
@@ -169,6 +169,20 @@ class ListeningHistoryEpisode {
        ORDER BY lhe.last_played_at DESC
        LIMIT $3`,
             [userId, podcastId, limit]
+        );
+        return result.rows;
+    }
+
+    static async getByUserWithPagination(userId, limit = 10, offset = 0) {
+        const result = await db.query(
+            `SELECT lhe.*, e.title, e.duration, e.audio_path, p.title as podcast_title, p.cover_image
+       FROM listening_history_episodes lhe
+       INNER JOIN episodes e ON lhe.episode_id = e.id
+       INNER JOIN podcasts p ON e.podcast_id = p.id
+       WHERE lhe.user_id = $1
+       ORDER BY lhe.last_played_at DESC
+       LIMIT $2 OFFSET $3`,
+            [userId, limit, offset]
         );
         return result.rows;
     }

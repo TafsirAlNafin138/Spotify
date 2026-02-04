@@ -78,6 +78,15 @@ class User {
     );
     return parseInt(result.rows[0].count);
   }
+
+  // Delete user by Clerk ID
+  static async deleteByClerkId(clerkId) {
+    const result = await db.query(
+      'DELETE FROM users WHERE clerk_id = $1 RETURNING *',
+      [clerkId]
+    );
+    return result.rows[0];
+  }
 }
 
 export default User;

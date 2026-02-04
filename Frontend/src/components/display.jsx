@@ -4,20 +4,27 @@ import DisplayHome from "./displayhome";
 import DisplayAlbum from "./DisplayAlbum";
 import { albumsData } from "../assets/assets";
 
+import AdminPage from "../admin/AdminPage";
+
 const Display = () => {
     const displayRef = useRef();
     const location = useLocation();
-    let albumId = (location.pathname.includes("/album/"))? location.pathname.slice(-1) : null;
+    let albumId = (location.pathname.includes("/album/")) ? location.pathname.slice(-1) : null;
     albumId = albumId && isNaN(albumId) ? null : albumId;
     const bgColor = albumsData[albumId]?.bgColor || "#121212";
     useEffect(() => {
-    displayRef.current.style.background = `linear-gradient(180deg, ${bgColor} 0%, #121212 100%)`;
+        if (location.pathname.includes("admin")) {
+            displayRef.current.style.background = "#121212";
+        } else {
+            displayRef.current.style.background = `linear-gradient(180deg, ${bgColor} 0%, #121212 100%)`;
+        }
     }, [location, bgColor]);
     return (
-        <div ref={displayRef} className="w-[100%] m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto lg:w-[75%] lg:ml-0">
+        <div ref={displayRef} className="w-full h-full m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto">
             <Routes>
                 <Route path="/" element={<DisplayHome />} />
                 <Route path="/album/:id" element={<DisplayAlbum />} />
+                <Route path="/admin" element={<AdminPage />} />
             </Routes>
         </div>
     )

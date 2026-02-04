@@ -4,11 +4,14 @@ import Player from "./components/player";
 import Display from "./components/display";
 import { PlayerContext } from "./contexts/PlayerContext.jsx";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
-import axios from 'axios';
+import { axiosInstance } from './services/axios';
+import SlideHandler from "./components/SlideHandler.jsx";
 
 export default function App() {
 
   const { audioRef, track, playerState } = React.useContext(PlayerContext);
+  const [sidebarWidth, setSidebarWidth] = React.useState(20); // Default 20%
+  const [isDragging, setIsDragging] = React.useState(false);
 
   useEffect(() => {
     if (audioRef.current && track.file) {
@@ -21,32 +24,38 @@ export default function App() {
     // only run when the track changes — don't run on play/pause to avoid resetting currentTime
   }, [track.file, track]);
 
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const handleMouseDown = () => {
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = useCallback((e) => {
+    if (isDragging) {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      // Clamp between 15% and 40%
+      const clampedWidth = Math.min(Math.max(newWidth, 15), 40);
+      setSidebarWidth(clampedWidth);
+    }
+  }, [isDragging]);
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
   useEffect(() => {
-    if (user) {
-      const syncUser = async () => {
-        try {
-          const token = await getToken();
-          await axios.post('http://localhost:5000/api/auth/callback', {
-            id: user.id,
-            email_addresses: user.emailAddresses,
-            first_name: user.firstName,
-            last_name: user.lastName,
-            image_url: user.imageUrl,
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-        } catch (error) {
-          console.error("Error syncing user:", error);
-        }
-      };
-      syncUser();
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     }
-  }, [user]);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove]);
+
 
   return (
     <>
@@ -69,8 +78,13 @@ export default function App() {
             <UserButton afterSignOutUrl="/" />
           </div>
           <div className="h-[90%] flex">
-            <Sidebar />
-            <Display />
+            <div style={{ width: `${sidebarWidth}%` }} className="h-full">
+              <Sidebar />
+            </div>
+            <SlideHandler onDrag={handleMouseDown} />
+            <div style={{ width: `${100 - sidebarWidth - 4}%` }} className="h-full">
+              <Display />
+            </div>
           </div>
           <Player />
           <audio ref={audioRef} src={track.file} preload='auto'></audio>

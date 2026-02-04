@@ -79,7 +79,7 @@ class PodcastFollower {
     }
 
     // Get recently followed podcasts by user
-    static async getRecentlyFollowed(userId, limit = 10) {
+    static async getRecentlyFollowed(userId, limit = 6) {
         const result = await db.query(
             `SELECT p.*, pf.followed_at
        FROM podcasts p

@@ -41,7 +41,7 @@ class ListeningHistoryTrack {
     }
 
     // Get recently played tracks
-    static async getRecentlyPlayed(userId, limit = 20) {
+    static async getRecentlyPlayed(userId, limit = 6) {
         const result = await db.query(
             `SELECT lht.*, t.name, t.duration, t.image, t.path
        FROM listening_history_tracks lht

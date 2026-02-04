@@ -2,12 +2,12 @@ import db from '../config/database.js';
 
 class Genre {
     // Create a new genre
-    static async create({ name }) {
+    static async create({ name, theme_color }) {
         const result = await db.query(
-            `INSERT INTO genres (name) 
-       VALUES ($1) 
+            `INSERT INTO genres (name, theme_color) 
+       VALUES ($1, $2) 
        RETURNING *`,
-            [name]
+            [name, theme_color]
         );
         return result.rows[0];
     }
@@ -124,7 +124,7 @@ class Genre {
         const result = await db.query(
             'SELECT COUNT(*) as count FROM genres'
         );
-        return parseInt(result.rows[0].count);
+        return parseInt(result.rows[0].count, 10);
     }
 }
 

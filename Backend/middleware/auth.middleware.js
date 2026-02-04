@@ -32,14 +32,18 @@ export const requireAdmin = async (req, res, next) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const email = current_user.emailAddresses[0]?.emailAddress;
+        const userEmails = current_user.emailAddresses.map(e => e.emailAddress);
+        const adminEmails = [
+            process.env.ADMIN_EMAIL1?.trim(),
+            process.env.ADMIN_EMAIL2?.trim()
+        ].filter(Boolean);
 
         const isAdmin =
-            email === process.env.ADMIN_EMAIL1 ||
-            email === process.env.ADMIN_EMAIL2;
+            userEmails.some(email => adminEmails.includes(email)) ||
+            current_user.publicMetadata?.role === "admin";
 
         if (!isAdmin) {
-            return res.status(403).json({ message: "Forbidden" });
+            return res.status(403).json({ message: "Forbidden: Admin access required" });
         }
 
         req.userId = auth.userId;
