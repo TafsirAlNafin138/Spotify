@@ -54,7 +54,7 @@ const EpisodesTable = () => {
                                     variant={"ghost"}
                                     size={"sm"}
                                     className='text-red-400 hover:text-red-300 hover:bg-red-400/10'
-                                    onClick={() => deleteEpisode(episode.podcastId, episode.id)}
+                                    onClick={() => deleteEpisode(episode.podcast_id, episode.id)}
                                 >
                                     <Trash2 className='size-4' />
                                 </Button>

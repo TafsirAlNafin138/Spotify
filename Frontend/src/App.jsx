@@ -3,12 +3,19 @@ import Sidebar from "./components/sidebar";
 import Player from "./components/player";
 import Display from "./components/display";
 import { PlayerContext } from "./contexts/PlayerContext.jsx";
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
-import { axiosInstance } from './services/axios';
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+  useUser,
+  useAuth,
+} from "@clerk/clerk-react";
+import { axiosInstance } from "./services/axios";
 import SlideHandler from "./components/SlideHandler.jsx";
+import { useLocation } from "react-router-dom";
 
 export default function App() {
-
   const { audioRef, track, playerState } = React.useContext(PlayerContext);
   const [sidebarWidth, setSidebarWidth] = React.useState(20); // Default 20%
   const [isDragging, setIsDragging] = React.useState(false);
@@ -18,7 +25,9 @@ export default function App() {
       audioRef.current.src = track.file;
       audioRef.current.load();
       if (playerState) {
-        audioRef.current.play().catch(err => console.error("Play failed:", err));
+        audioRef.current
+          .play()
+          .catch((err) => console.error("Play failed:", err));
       }
     }
     // only run when the track changes — don't run on play/pause to avoid resetting currentTime
@@ -28,14 +37,17 @@ export default function App() {
     setIsDragging(true);
   };
 
-  const handleMouseMove = useCallback((e) => {
-    if (isDragging) {
-      const newWidth = (e.clientX / window.innerWidth) * 100;
-      // Clamp between 15% and 40%
-      const clampedWidth = Math.min(Math.max(newWidth, 15), 40);
-      setSidebarWidth(clampedWidth);
-    }
-  }, [isDragging]);
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (isDragging) {
+        const newWidth = (e.clientX / window.innerWidth) * 100;
+        // Clamp between 15% and 40%
+        const clampedWidth = Math.min(Math.max(newWidth, 15), 40);
+        setSidebarWidth(clampedWidth);
+      }
+    },
+    [isDragging],
+  );
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -43,26 +55,29 @@ export default function App() {
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
     } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, handleMouseMove]);
 
+  const isAdminRoute = useLocation().pathname.startsWith("/admin");
 
   return (
     <>
       <SignedOut>
         <div className="h-screen bg-neutral-900 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-white text-4xl font-bold mb-8">Welcome to Spotify Clone</h1>
+            <h1 className="text-white text-4xl font-bold mb-8">
+              Welcome to Spotify Clone
+            </h1>
             <SignInButton mode="modal">
               <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-full transition duration-300">
                 Sign In to Continue
@@ -74,20 +89,25 @@ export default function App() {
 
       <SignedIn>
         <div className="h-screen bg-neutral-900 flex flex-col">
-          <div className="absolute top-4 right-4 z-50">
-            <UserButton afterSignOutUrl="/" />
-          </div>
+          {!isAdminRoute && (
+            <div className="absolute top-4 right-4 z-50">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          )}
           <div className="h-[90%] flex">
             <div style={{ width: `${sidebarWidth}%` }} className="h-full">
               <Sidebar />
             </div>
             <SlideHandler onDrag={handleMouseDown} />
-            <div style={{ width: `${100 - sidebarWidth - 4}%` }} className="h-full">
+            <div
+              style={{ width: `${100 - sidebarWidth - 4}%` }}
+              className="h-full"
+            >
               <Display />
             </div>
           </div>
-          <Player />
-          <audio ref={audioRef} src={track.file} preload='auto'></audio>
+          {!isAdminRoute && <Player />}
+          <audio ref={audioRef} src={track.file} preload="auto"></audio>
         </div>
       </SignedIn>
     </>

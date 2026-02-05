@@ -751,12 +751,16 @@ export const UploadEpisodeToPodcasts = async (req, res) => {
 
 export const deleteEpisode = async (req, res) => {
     try {
-        const podcastId = req.params.podcastId;
-        const episodeId = req.params.episodeId;
+        const episodeId = req.params.episode_id;
+        const podcastId = req.params.id;
+        // console.log("Deleting episode with ID:", episodeId);
+        // console.log("All params:", req.params);
+        
         if (!episodeId) {
             return res.status(400).json(new ApiError(400, "Episode ID is required"));
         }
         const findEpisode = await Episode.findById(episodeId);
+        console.log("findEpisode:", findEpisode);
         if (!findEpisode) {
             return res.status(404).json(new ApiError(404, "Episode not found"));
         }
