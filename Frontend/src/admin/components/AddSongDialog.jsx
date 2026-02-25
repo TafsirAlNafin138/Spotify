@@ -41,6 +41,7 @@ const AddSongDialog = () => {
         genreId: [],
         album: "",
         duration: "0",
+        track_number: "",
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -82,6 +83,9 @@ const AddSongDialog = () => {
             formData.append("duration", newSong.duration);
             if (newSong.album && newSong.album !== "none") {
                 formData.append("album_id", newSong.album);
+                if (newSong.track_number) {
+                    formData.append("track_number", newSong.track_number);
+                }
             }
 
             // Handle Artist and Genre as JSON strings for backend array processing
@@ -109,6 +113,7 @@ const AddSongDialog = () => {
                 genreId: [],
                 album: "",
                 duration: "0",
+                track_number: "",
             });
             setImageFile(null);
             setAudioFile(null);
@@ -259,6 +264,20 @@ const AddSongDialog = () => {
                                 ))}
                             </SelectContent>
                         </Select>
+
+                        {newSong.album && newSong.album !== 'none' && (
+                            <div className='mt-3 space-y-2'>
+                                <label className='text-sm font-medium'>Track Order</label>
+                                <Input
+                                    type='number'
+                                    min='1'
+                                    value={newSong.track_number}
+                                    onChange={(e) => setNewSong({ ...newSong, track_number: e.target.value })}
+                                    className='bg-zinc-800 border-zinc-700'
+                                    placeholder='e.g. 1, 2, 3...'
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className='space-y-2'>

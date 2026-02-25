@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API 304 Debug Tool</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 32px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 16px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+
+      .btn-secondary:hover {
+        background: #e0e0e0;
+      }
+
+      .status-box {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .status-code {
+        font-size: 48px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .status-code.success {
+        color: #28a745;
+      }
+
+      .status-code.cached {
+        color: #ffc107;
+      }
+
+      .status-code.error {
+        color: #dc3545;
+      }
+
+      .headers-box {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .headers-box h3 {
+        color: #9ae6b4;
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+
+      .header-line {
+        margin: 8px 0;
+        padding: 4px 0;
+      }
+
+      .header-name {
+        color: #90cdf4;
+        font-weight: bold;
+      }
+
+      .header-value {
+        color: #faf089;
+      }
+
+      .data-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .data-box h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-family: "Segoe UI", sans-serif;
+        font-size: 18px;
+      }
+
+      .timestamp {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(102, 126, 234, 0.3);
+        border-radius: 50%;
+        border-top-color: #667eea;
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .info-banner {
+        background: linear-gradient(135deg, #667eea15, #764ba215);
+        border: 2px solid #667eea;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .info-banner strong {
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 API 304 Debug Tool</h1>
+      <p class="subtitle">
+        Test the /api/tracks/new-releases endpoint for caching issues
+      </p>
+
+      <div class="info-banner">
+        <strong>What is 304?</strong> HTTP 304 "Not Modified" means the browser
+        is using cached data. We want to see <strong>200 OK</strong> with fresh
+        data on every request.
+      </div>
+
+      <div class="controls">
+        <button class="btn-primary" onclick="fetchNewReleases()">
+          🚀 Fetch New Releases
+        </button>
+        <button class="btn-secondary" onclick="fetchWithCacheBuster()">
+          ⚡ Fetch (Cache Busted)
+        </button>
+        <button class="btn-secondary" onclick="clearResults()">
+          🗑️ Clear Results
+        </button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:2222/api/tracks/new-releases";
+
+      async function fetchNewReleases() {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML =
+          '<div class="status-box">Fetching...<span class="loading"></span></div>';
+
+        try {
+          const startTime = Date.now();
+          const response = await fetch(API_URL, {
+            credentials: "include",
+            cache: "default", // Allow browser caching
+          });
+          const endTime = Date.now();
+
+          const data = await response.json();
+          displayResults(response, data, endTime - startTime, "Normal Fetch");
+        } catch (error) {
+          displayError(error);
+        }
+      }
+
+      async function fetchWithCacheBuster() {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML =
+          '<div class="status-box">Fetching with cache buster...<span class="loading"></span></div>';
+
+        try {
+          const startTime = Date.now();
+          const cacheBustedUrl = `${API_URL}?t=${Date.now()}`;
+          const response = await fetch(cacheBustedUrl, {
+            credentials: "include",
+            cache: "no-cache", // Disable browser caching
+          });
+          const endTime = Date.now();
+
+          const data = await response.json();
+          displayResults(
+            response,
+            data,
+            endTime - startTime,
+            "Cache-Busted Fetch",
+          );
+        } catch (error) {
+          displayError(error);
+        }
+      }
+
+      function displayResults(response, data, duration, method) {
+        const resultsDiv = document.getElementById("results");
+        const statusClass =
+          response.status === 200
+            ? "success"
+            : response.status === 304
+              ? "cached"
+              : "error";
+
+        const statusText =
+          response.status === 200
+            ? "✅ SUCCESS - Fresh Data"
+            : response.status === 304
+              ? "⚠️ CACHED - Using old data"
+              : `❌ ERROR - ${response.statusText}`;
+
+        // Extract headers
+        const headers = {};
+        for (const [key, value] of response.headers.entries()) {
+          headers[key] = value;
+        }
+
+        const headersHtml = Object.entries(headers)
+          .map(
+            ([key, value]) => `
+                    <div class="header-line">
+                        <span class="header-name">${key}:</span> 
+                        <span class="header-value">${value}</span>
+                    </div>
+                `,
+          )
+          .join("");
+
+        const trackCount = data.data?.length || data.length || 0;
+
+        resultsDiv.innerHTML = `
+                <div class="status-box">
+                    <div class="status-code ${statusClass}">${response.status}</div>
+                    <div style="font-size: 18px; color: #333; font-weight: 600;">${statusText}</div>
+                    <div class="timestamp">
+                        Method: ${method} | Duration: ${duration}ms | 
+                        Tracks Count: ${trackCount} | 
+                        Time: ${new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+                
+                <div class="headers-box">
+                    <h3>📋 Response Headers</h3>
+                    ${headersHtml}
+                </div>
+                
+                <div class="data-box">
+                    <h3>📦 Response Data (First 2 tracks)</h3>
+                    <pre>${JSON.stringify(data.data?.slice(0, 2) || data.slice(0, 2), null, 2)}</pre>
+                </div>
+            `;
+      }
+
+      function displayError(error) {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = `
+                <div class="status-box">
+                    <div class="status-code error">❌</div>
+                    <div style="font-size: 18px; color: #333; font-weight: 600;">Error occurred</div>
+                    <div style="color: #dc3545; margin-top: 10px;">${error.message}</div>
+                    <div class="timestamp">Time: ${new Date().toLocaleTimeString()}</div>
+                </div>
+                
+                <div class="headers-box">
+                    <h3>💡 Possible Issues</h3>
+                    <div class="header-line">1. Make sure the backend server is running on port 2222</div>
+                    <div class="header-line">2. Ensure you're logged in (authenticated)</div>
+                    <div class="header-line">3. Check browser console for CORS errors</div>
+                    <div class="header-line">4. Verify the API endpoint exists</div>
+                </div>
+            `;
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+      }
+    </script>
+  </body>
+</html>

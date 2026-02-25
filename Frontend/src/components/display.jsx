@@ -2,16 +2,13 @@ import React, { useEffect, useRef } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import DisplayHome from "./displayhome";
 import DisplayAlbum from "./DisplayAlbum";
-import { albumsData } from "../assets/assets";
 
 import AdminPage from "../admin/AdminPage";
 
 const Display = () => {
     const displayRef = useRef();
     const location = useLocation();
-    let albumId = (location.pathname.includes("/album/")) ? location.pathname.slice(-1) : null;
-    albumId = albumId && isNaN(albumId) ? null : albumId;
-    const bgColor = albumsData[albumId]?.bgColor || "#121212";
+    const bgColor = "#121212";
     useEffect(() => {
         if (location.pathname.includes("admin")) {
             displayRef.current.style.background = "#121212";

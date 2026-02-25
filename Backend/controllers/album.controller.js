@@ -20,8 +20,11 @@ export const getAlbumById = async (req, res) => {
         if (!isexist) {
             return res.status(404).json(new ApiError(404, "Album not found"));
         }
-        const album = await Album.getTracks(req.params.id);
-        return res.status(200).json(new ApiResponse(200, album, "Album song fetched successfully"));
+        // const album = await Album.getTracks(req.params.id);
+        // // console.log(album);
+        // return res.status(200).json(new ApiResponse(200, album, "Album song fetched successfully"));
+        const album = await Album.getFullDetails(req.params.id);
+        return res.status(200).json(new ApiResponse(200, album, "Album fetched successfully"));
     } catch (error) {
         console.error("Error in getAlbumById:", error);
         return res.status(500).json(new ApiError(500, "Internal server error", error));

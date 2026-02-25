@@ -1,107 +1,134 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import NavigationBar from "./NavigationBar";
-import { albumsData, assets, songsData } from "../assets/assets";
+import { assets } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
+import { useAlbum } from "../hooks/useAlbums";
 
 const DisplayAlbum = () => {
   const { id } = useParams();
-  const albumdata = albumsData[parseInt(id)];
-  const {playWithId, toggleFollow, isFollowing, getFollowerCount} = React.useContext(PlayerContext);
-  // const [hoveredSong, setHoveredSong] = useState(null);
-  // const [likedSongs, setLikedSongs] = useState(new Set());
+  const { album, tracks, loading, error } = useAlbum(id);
+  const { playWithId, toggleFollow, isFollowing, getFollowerCount } = React.useContext(PlayerContext);
 
-  // const toggleLike = (songId) => {
-  //     setLikedSongs(prevLiked => {
-  //         const newLiked = new Set(prevLiked);
-  //         if (newLiked.has(songId)) {
-  //             newLiked.delete(songId);
-  //         } else {
-  //             newLiked.add(songId);
-  //         }
-  //         return newLiked;
-  //     });
-  // };
+  const convertDuration = (duration) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  if (loading) {
+    return (
+      <>
+        <NavigationBar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-gray-400 text-lg">Loading album...</div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !album) {
+    return (
+      <>
+        <NavigationBar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-red-400 text-lg">
+            {error || "Album not found"}
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <NavigationBar />
-      {albumdata ? (
-        <div className="mt-2 mb - 2">  
+      <div className="mt-2 mb-2">
         <div className="mt-10 flex gap-8 flex-col md:flex-row md:items-end">
           <img
-            src={albumdata.image}
-            alt={albumdata.name}
+            src={album.image_url || album.image}
+            alt={album.title || album.name}
             className="w-48 h-48 object-cover rounded"
           />
           <div>
-            <p className="text-sm font-semibold mb-2">Playlist</p>
-            <h2 className="text-4xl font-bold mb-4">{albumdata.name}</h2>
-            <h4 className="text-sm text-gray-400">{albumdata.desc}</h4>
+            <p className="text-sm font-semibold mb-2">Album</p>
+            <h2 className="text-4xl font-bold mb-4">{album.title || album.name}</h2>
+            <h4 className="text-sm text-gray-400">{album.description || album.desc}</h4>
             <p className="mt-2">
               <img
                 src={assets.spotify_logo}
                 alt="Spotify Logo"
                 className="w-6 inline-block mr-2"
               />
-              <b>{albumdata.artist || 'Spotify'} </b>
-              {/* &#8226; {likesData.length} likes */}
-              &#8226; <b> 50 songs </b>
-              {/* {albumdata.totalDuration} mins */}
+              <b>{album.artists?.map(a => a.name).join(', ') || 'Various Artists'} </b>
+              &#8226; <b>{tracks?.length || 0} songs </b>
             </p>
-            <div className="flex items-center gap-4 mt-4">
-              <button
-                onClick={() => toggleFollow(albumdata.artistId)}
-                className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                  isFollowing(albumdata.artistId)
+
+            {/* {album.artistId && (
+              <div className="flex items-center gap-4 mt-4">
+                <button
+                  onClick={() => toggleFollow(album.artistId)}
+                  className={`px-6 py-2 rounded-full font-semibold transition-all ${isFollowing(album.artistId)
                     ? 'bg-transparent border-2 border-white text-white hover:border-gray-300 hover:scale-105'
                     : 'bg-white text-black hover:bg-gray-200 hover:scale-105'
-                }`}
-              >
-                {isFollowing(albumdata.artistId) ? 'Following' : 'Follow'}
-              </button>
-              <p className="text-sm text-gray-400">
-                <span className="text-white font-semibold">{getFollowerCount(albumdata.artistId).toLocaleString()}</span> followers
-              </p>
-            </div>
+                    }`}
+                >
+                  {isFollowing(album.artistId) ? 'Following' : 'Follow'}
+                </button>
+                <p className="text-sm text-gray-400">
+                  <span className="text-white font-semibold">
+                    {getFollowerCount(album.artistId).toLocaleString()}
+                  </span> followers
+                </p>
+              </div>
+            )} */}
           </div>
         </div>
+
+        {/* Tracks Header */}
         <div className="grid grid-cols-3 sm:grid-cols-4 mt-10 mb-4 pl-2 text-[#a7a7a7]">
-            <p className="mr-4"># <b>Title </b></p>
-            <p>Album</p>
-            <p className="hidden sm:block">Date Added</p>
-            <img className="m-auto w-4" src={assets.clock_icon} alt="Time Icon" />
+          <p className="mr-4"># <b>Title </b></p>
+          <p>Album</p>
+          <p className="hidden sm:block">Duration</p>
+          <img className="m-auto w-4" src={assets.clock_icon} alt="Time Icon" />
         </div>
         <hr className="border-t border-gray-700 mb-4" />
+
+        {/* Tracks List */}
         <div>
-          {songsData.map((item, index) => (   
-            <div
-                key={index}
-                onClick={() => playWithId(item.id)}
+          {tracks && tracks.length > 0 ? (
+            tracks.map((track, index) => (
+              <div
+                key={track.id}
+                onClick={() => playWithId(track.id)}
                 className="grid grid-cols-3 sm:grid-cols-4 items-center gap-4 py-2 px-2 rounded hover:bg-[#ffffff26] cursor-pointer"
-            >
-                
+              >
                 <p className="text-white">
-                    <b className="mr-4 text-[#a7a7a7]">{index + 1}</b>
-                    <img
-                        className="w-10 h-10 inline-block mr-4"
-                        src={item.image}
-                        alt={item.name}
-                    />
-                    <span>{item.name}</span>
+                  <b className="mr-4 text-[#a7a7a7]">{index + 1}</b>
+                  <img
+                    className="w-10 h-10 inline-block mr-4"
+                    src={track.image_url || track.image || album.image_url}
+                    alt={track.title || track.name}
+                  />
+                  <span>{track.title || track.name}</span>
                 </p>
-                <p className="text-[15px]">{albumdata.name}</p>
-                <p className="hidden sm:block text-[15px]">Aug 20, 2023</p>
-                <p className="text-[15px] text-center">{item.duration}</p>
-                </div>
-          ))}
+                <p className="text-[15px]">{album.title || album.name}</p>
+                <p className="hidden sm:block text-[15px]">
+                  {convertDuration(track.duration)}
+                </p>
+                <p className="text-[15px] text-center">{convertDuration(track.duration)}</p>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-gray-400">No tracks in this album</div>
+            </div>
+          )}
         </div>
-         </div>
-      ) : (
-        <p className="text-center text-red-500 mt-10">Album not found.</p>
-      )}
+      </div>
     </>
   );
 };
 
 export default DisplayAlbum;
+

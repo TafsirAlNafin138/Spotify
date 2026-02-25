@@ -1,5 +1,5 @@
 import React from "react";
-import { assets, songsData } from "../assets/assets";
+import { assets } from "../assets/assets";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const Player = () => {

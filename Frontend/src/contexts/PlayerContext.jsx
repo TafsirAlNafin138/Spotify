@@ -1,10 +1,20 @@
-import { createContext, useEffect, useRef, useState } from "react"
-import { songsData } from "../assets/assets";
+import { createContext, useEffect, useRef, useState, useCallback } from "react"
+import { axiosInstance } from "../services/axios";
+
 const PlayerContext = createContext();
 
 const PlayerContextProvider = (props) => {
 
-    const [track, setTrack] = useState(songsData[0]);
+    const [songsData, setSongsData] = useState([]);
+    const [songsLoading, setSongsLoading] = useState(true);
+    const [track, setTrack] = useState({
+        id: null,
+        name: "",
+        image: "",
+        file: "",
+        desc: "",
+        duration: "0:00"
+    });
     const [playerState, setPlayerState] = useState(false); // false - paused, true - playing
     const [trackProgress, setTrackProgress] = useState({  // song player progress in seconds and minutes
         currentTime: {
@@ -22,14 +32,7 @@ const PlayerContextProvider = (props) => {
     const [queue, setQueue] = useState([]);
     const [isQueueOpen, setIsQueueOpen] = useState(false);
     const [likedSongs, setLikedSongs] = useState({});
-    const [songLikes, setSongLikes] = useState(() => {
-        const initial = {};
-        songsData.forEach((song, idx) => {
-            const key = song?.id ?? idx;
-            initial[key] = 0;
-        });
-        return initial;
-    });
+    const [songLikes, setSongLikes] = useState({});
     const [followedArtists, setFollowedArtists] = useState(() => {
         const saved = localStorage.getItem('spotifyFollowedArtists');
         return saved ? JSON.parse(saved) : {};
@@ -46,68 +49,123 @@ const PlayerContextProvider = (props) => {
     const volumeBg = useRef();
     const volumeBar = useRef();
 
+    // Fetch songs from backend on mount
+    useEffect(() => {
+        const fetchSongs = async () => {
+            try {
+                setSongsLoading(true);
+                const response = await axiosInstance.get('/tracks/trending');
+                const tracks = response.data.data || response.data;
+                setSongsData(tracks);
 
-    //     const fetchSong = async (id) => {
-    //   const res = await fetch(`/api/songs/${id}`);
-    //   return await res.json();
-    // };
+                // Set initial track if available
+                if (tracks.length > 0) {
+                    const firstTrack = tracks[0];
+                    setTrack({
+                        id: firstTrack.id,
+                        name: firstTrack.name || firstTrack.title,
+                        image: firstTrack.image || firstTrack.image_url,
+                        file: firstTrack.path,
+                        desc: firstTrack.artist || firstTrack.desc || "",
+                        duration: formatDuration(firstTrack.duration)
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching songs for player:', err);
+            } finally {
+                setSongsLoading(false);
+            }
+        };
+        fetchSongs();
+    }, []);
 
-    // const playWithId = async (id) => {
-    //   const song = await fetchSong(id);
-    //   setTrack(song);
-    //   audioRef.current.src = song.url; // set new source
-    //   await new Promise((resolve) => {
-    //     audioRef.current.onloadedmetadata = resolve;
-    //   });
-    //   await audioRef.current.play();
-    //   setPlayerState(true);
-    // };
+    // Helper to format duration from seconds to "m:ss"
+    const formatDuration = (seconds) => {
+        if (!seconds || isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
-    //    const parsetimeStringToSeconds = (str) => {
-    //      const parts = str.split(":").map(Number);
-    //      if (parts.length === 1) return parts[0] || 0;
-    //      if (parts.length === 2) return parts[0] * 60 + (parts[1] || 0);
-    //      const [h, m, s] = parts.slice(-3);
-    //      return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-    //    };
+    // Helper to normalize a backend track object into the shape the player expects
+    const normalizeTrack = (t) => ({
+        id: t.id,
+        name: t.name || t.title,
+        image: t.image || t.image_url,
+        file: t.path,
+        desc: t.artist || t.desc || "",
+        duration: formatDuration(t.duration)
+    });
 
     const playWithId = async (id) => {
-        setTrack(songsData[id]);
-        await audioRef.current.play();
-        setTrackProgress({
-            currentTime: {
-                seconds: 0,
-                minutes: 0
-            },
-            duration: {
-                seconds: 0,
-                minutes: 0
+        // First check if the track is already in our loaded songsData
+        const found = songsData.find(s => s.id === id);
+        if (found) {
+            setTrack(normalizeTrack(found));
+        } else {
+            // Fetch from backend
+            try {
+                const response = await axiosInstance.get(`/tracks/${id}`);
+                const trackData = response.data.data || response.data;
+                setTrack(normalizeTrack(trackData));
+
+                // Also add to songsData so prev/next works
+                setSongsData(prev => {
+                    if (prev.find(s => s.id === id)) return prev;
+                    return [...prev, trackData];
+                });
+            } catch (err) {
+                console.error('Error fetching track:', err);
+                return;
             }
+        }
+
+        // Increment play count (fire-and-forget)
+        axiosInstance.post(`/tracks/${id}/play`).catch(err =>
+            console.error('Failed to increment play count:', err)
+        );
+
+        // Wait for audio to be ready, then play
+        if (audioRef.current) {
+            // The src will be updated by the useEffect in App.jsx that watches track.file
+            // We need a small delay for the src to update
+            setTimeout(async () => {
+                try {
+                    await audioRef.current.play();
+                    setPlayerState(true);
+                } catch (err) {
+                    console.error('Play failed:', err);
+                }
+            }, 100);
+        }
+
+        setTrackProgress({
+            currentTime: { seconds: 0, minutes: 0 },
+            duration: { seconds: 0, minutes: 0 }
         });
-        seekBar.current.style.width = `0%`;
-        seekBg.current.style.width = `0%`;
-        setPlayerState(true);
+        if (seekBar.current) seekBar.current.style.width = `0%`;
+        if (seekBg.current) seekBg.current.style.width = `0%`;
     }
+
     const prevTrack = () => {
-        let prevId = track.id - 1;
-        if (prevId < 0) prevId = songsData.length - 1;
-        playWithId(prevId);
+        if (songsData.length === 0) return;
+        const currentIndex = songsData.findIndex(s => s.id === track.id);
+        let prevIndex = currentIndex - 1;
+        if (prevIndex < 0) prevIndex = songsData.length - 1;
+        playWithId(songsData[prevIndex].id);
     }
+
     const nextTrack = () => {
-        let nextId = track.id + 1;
-        if (nextId >= songsData.length) nextId = 0;
-        playWithId(nextId);
+        if (songsData.length === 0) return;
+        const currentIndex = songsData.findIndex(s => s.id === track.id);
+        let nextIndex = currentIndex + 1;
+        if (nextIndex >= songsData.length) nextIndex = 0;
+        playWithId(songsData[nextIndex].id);
     }
 
 
     const seekSong = async (e) => {
         if (!seekBg.current || !audioRef.current) return;
-
-        //         if (isNaN(audioRef.current.duration)) {
-        //     await new Promise((res) => {
-        //       audioRef.current.onloadedmetadata = res;
-        //     });
-        //   }
 
         const seekBarWidth = seekBg.current.clientWidth;
         const clickX = e.nativeEvent.offsetX;
@@ -212,16 +270,6 @@ const PlayerContextProvider = (props) => {
         });
     }
 
-    // // Save liked songs to localStorage whenever they change
-    // useEffect(() => {
-    //     localStorage.setItem('spotifyLikedSongs', JSON.stringify(likedSongs));
-    // }, [likedSongs]);
-
-    // // Save song likes count to localStorage whenever they change
-    // useEffect(() => {
-    //     localStorage.setItem('spotifySongLikes', JSON.stringify(songLikes));
-    // }, [songLikes]);
-
     const isLiked = (songId) => {
         return likedSongs[songId] || false;
     }
@@ -239,7 +287,7 @@ const PlayerContextProvider = (props) => {
             // Update follower count based on current state
             setArtistFollowers(prevFollowers => ({
                 ...prevFollowers,
-                [artistId]: artistFollowers[artistId] + (isCurrentlyFollowing ? 1 : -1)
+                [artistId]: (artistFollowers[artistId] || 0) + (isCurrentlyFollowing ? 1 : -1)
             }));
 
             return {

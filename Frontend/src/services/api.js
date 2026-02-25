@@ -1,5 +1,5 @@
 // API Base URL - Update this to your backend URL
-const API_URL = 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:2222/api';
 
 // Helper function to get auth token from localStorage
 const getAuthToken = () => {
