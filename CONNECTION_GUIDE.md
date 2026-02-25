@@ -17,13 +17,35 @@ Both servers are running and connected:
 #### Backend (.env)
 
 ```env
-PORT=2222
-DATABASE_URL=postgresql://...
-CLOUDINARY_CLOUD_NAME=dzbantnnc
-CLOUDINARY_API_KEY=631316729954631
-CLOUDINARY_API_SECRET=8ZWqRZ-Xx-iqZHBIHKgtgGdSczo
+PORT = 2222
+
+CLOUDINARY_CLOUD_NAME='dzbantnnc'
+CLOUDINARY_API_KEY='631316729954631'
+CLOUDINARY_API_SECRET='8ZWqRZ-Xx-iqZHBIHKgtgGdSczo'
+
+# This was inserted by `prisma init`:
+# Environment variables declared in this file are NOT automatically loaded by Prisma.
+# Please add `import "dotenv/config";` to your `prisma.config.ts` file, or use the Prisma CLI with Bun
+# to load environment variables from .env files: https://pris.ly/prisma-config-env-vars.
+
+# Prisma supports the native connection string format for PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB.
+# See the documentation for all the connection string options: https://pris.ly/d/connection-strings
+
+DATABASE_URL='postgresql://neondb_owner:npg_Owk8vgDjnE2B@ep-lucky-firefly-a1j1og2c-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+
+
 CLERK_PUBLISHABLE_KEY=pk_test_ZG9taW5hbnQtY2xhbS04NS5jbGVyay5hY2NvdW50cy5kZXYk
 CLERK_SECRET_KEY=sk_test_gCN0zBZsdK206ttGCQBr3Z38rhcpDs68aGQmuWGf8s
+ADMIN_EMAIL1=tafsiral21@gmail.com
+ADMIN_EMAIL2=afifsiddique.64drmc@gmail.com
+CLERK_WEBHOOK_SECRET=whsec_GK7g+aTonnCIMaAdA5jgERwAtWlolxMK
+
+
+# imp command npx localtunnel --port 2222 --subdomain my-spotify-dev
+
+
+
+
 ```
 
 #### Frontend (.env)
