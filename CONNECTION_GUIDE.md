@@ -8,7 +8,7 @@ Both servers are running and connected:
 - **Frontend**: `http://localhost:5173` ✅
 - **Database**: Neon PostgreSQL ✅
 
----
+----
 
 ## 🔧 Configuration Summary
 
