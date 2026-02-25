@@ -52,7 +52,8 @@ CLERK_WEBHOOK_SECRET=whsec_GK7g+aTonnCIMaAdA5jgERwAtWlolxMK
 
 ```env
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZG9taW5hbnQtY2xhbS04NS5jbGVyay5hY2NvdW50cy5kZXYk
-VITE_API_URL=http://localhost:2222/api
+VITE_ADMIN_EMAIL1=tafsiral21@gmail.com
+VITE_ADMIN_EMAIL2=afifsiddique.64drmc@gmail.com
 ```
 
 ### Axios Configuration
