@@ -1,0 +1,113 @@
+╔══════════════════════════════════════════════════════════════╗
+║         SPOTIFY CLONE - QUICK REFERENCE CARD                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🟢 SERVERS RUNNING                                          │
+├─────────────────────────────────────────────────────────────┤
+│ Backend:  http://localhost:2222                             │
+│ Frontend: http://localhost:5173                             │
+│ Database: Neon PostgreSQL (Connected ✅)                    │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🚀 STARTING THE APP                                         │
+├─────────────────────────────────────────────────────────────┤
+│ Terminal 1 (Backend):                                       │
+│   cd "e:\SPOTIFY PROJECT\Spotify\Backend"                   │
+│   npm run dev                                               │
+│                                                             │
+│ Terminal 2 (Frontend):                                      │
+│   cd "e:\SPOTIFY PROJECT\Spotify\Frontend"                  │
+│   npm run dev                                               │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 📡 KEY API ENDPOINTS                                        │
+├─────────────────────────────────────────────────────────────┤
+│ GET    /api/albums          - Get all albums               │
+│ GET    /api/tracks          - Get all tracks               │
+│ POST   /api/auth/callback   - Auth sync with Clerk         │
+│ GET    /api/admin/stats     - Admin statistics (protected) │
+│ GET    /api/admin/trackscount - All tracks (admin)         │
+│ POST   /api/admin/tracks    - Create track (admin)         │
+│ DELETE /api/admin/tracks/:id - Delete track (admin)        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🔐 AUTHENTICATION                                           │
+├─────────────────────────────────────────────────────────────┤
+│ Provider: Clerk Authentication                              │
+│ Flow: Sign In → Get Token → Sync with Backend → API Calls  │
+│ Token: Automatically added to axios headers                 │
+│ Protected: Admin routes require admin role                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 📦 MAKING API CALLS                                         │
+├─────────────────────────────────────────────────────────────┤
+│ import { axiosInstance } from '@/services/axios';           │
+│                                                             │
+│ // GET request                                              │
+│ const albums = await axiosInstance.get('/albums');         │
+│                                                             │
+│ // POST request                                             │
+│ const newSong = await axiosInstance.post('/admin/tracks',  │
+│   { title: 'Song Name', ... });                            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🎯 TESTING CONNECTION                                       │
+├─────────────────────────────────────────────────────────────┤
+│ 1. Open http://localhost:5173 in browser                    │
+│ 2. Sign in with Clerk                                       │
+│ 3. Open browser console (F12)                               │
+│ 4. Look for connection test results                         │
+│                                                             │
+│ OR manually test:                                           │
+│   curl http://localhost:2222/api/albums                     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 🐛 COMMON ISSUES & FIXES                                    │
+├─────────────────────────────────────────────────────────────┤
+│ Issue: CORS error                                           │
+│ Fix: Ensure backend running on port 2222                    │
+│                                                             │
+│ Issue: 401 Unauthorized                                     │
+│ Fix: Sign in via Clerk on frontend                          │
+│                                                             │
+│ Issue: Connection refused                                   │
+│ Fix: Start backend server (npm run dev)                     │
+│                                                             │
+│ Issue: .env changes not working                             │
+│ Fix: Restart Vite dev server (Ctrl+C → npm run dev)        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ 📁 IMPORTANT FILES                                          │
+├─────────────────────────────────────────────────────────────┤
+│ Backend/server.js           - Main server, CORS config      │
+│ Backend/routes/admin.route.js - Admin API routes           │
+│ Frontend/src/services/axios.js - Axios config              │
+│ Frontend/src/providers/AuthProvider.jsx - Auth sync        │
+│ Frontend/src/stores/useMusicStore.js - State management    │
+│ Frontend/.env               - Frontend environment vars     │
+│ Backend/.env                - Backend environment vars      │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ ✅ CONNECTION STATUS                                        │
+├─────────────────────────────────────────────────────────────┤
+│ [✅] Backend running (port 2222)                            │
+│ [✅] Frontend running (port 5173)                           │
+│ [✅] Database connected (Neon)                              │
+│ [✅] CORS configured                                        │
+│ [✅] Environment variables set                              │
+│ [✅] Axios configured                                       │
+│ [✅] Auth provider integrated                               │
+│                                                             │
+│ 🎉 ALL SYSTEMS OPERATIONAL                                  │
+└─────────────────────────────────────────────────────────────┘
+
+For detailed documentation, see: CONNECTION_GUIDE.md

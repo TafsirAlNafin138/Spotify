@@ -6,12 +6,25 @@ import { PlayerContext } from "./contexts/PlayerContext.jsx";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
 import { axiosInstance } from './services/axios';
 import SlideHandler from "./components/SlideHandler.jsx";
+import { runAllTests } from './utils/testConnection';
 
 export default function App() {
 
   const { audioRef, track, playerState } = React.useContext(PlayerContext);
   const [sidebarWidth, setSidebarWidth] = React.useState(20); // Default 20%
   const [isDragging, setIsDragging] = React.useState(false);
+  const { isSignedIn } = useAuth();
+  const [connectionTested, setConnectionTested] = React.useState(false);
+
+  // Test backend connection when user signs in
+  useEffect(() => {
+    if (isSignedIn && !connectionTested) {
+      console.log('🔗 Testing backend connection...');
+      runAllTests().then(() => {
+        setConnectionTested(true);
+      });
+    }
+  }, [isSignedIn, connectionTested]);
 
   useEffect(() => {
     if (audioRef.current && track.file) {

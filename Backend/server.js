@@ -23,6 +23,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Disable ETag generation to prevent 304 Not Modified responses
+app.disable('etag');
+
 // Middlewares
 app.use(helmet());
 app.use(cors({
