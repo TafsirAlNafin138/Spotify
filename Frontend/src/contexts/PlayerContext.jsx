@@ -31,6 +31,8 @@ const PlayerContextProvider = (props) => {
 
     const [queue, setQueue] = useState([]);
     const [isQueueOpen, setIsQueueOpen] = useState(false);
+    const [activePlaylist, setActivePlaylist] = useState(null); // { tracks: [], name: '' }
+    const [activeAlbum, setActiveAlbum] = useState(null); // { tracks: [], name: '' }
     const [likedSongs, setLikedSongs] = useState({});
     const [songLikes, setSongLikes] = useState({});
     const [followedArtists, setFollowedArtists] = useState(() => {
@@ -148,19 +150,23 @@ const PlayerContextProvider = (props) => {
     }
 
     const prevTrack = () => {
-        if (songsData.length === 0) return;
-        const currentIndex = songsData.findIndex(s => s.id === track.id);
+        // Use activePlaylist (e.g. album tracks) if available, otherwise fall back to global songsData
+        const playlist = activePlaylist?.tracks?.length > 0 ? activePlaylist.tracks : activeAlbum?.tracks?.length > 0 ? activeAlbum.tracks : songsData;
+        if (playlist.length === 0) return;
+        const currentIndex = playlist.findIndex(s => s.id === track.id);
         let prevIndex = currentIndex - 1;
-        if (prevIndex < 0) prevIndex = songsData.length - 1;
-        playWithId(songsData[prevIndex].id);
+        if (prevIndex < 0) prevIndex = playlist.length - 1;
+        playWithId(playlist[prevIndex].id);
     }
 
     const nextTrack = () => {
-        if (songsData.length === 0) return;
-        const currentIndex = songsData.findIndex(s => s.id === track.id);
+        // Use activePlaylist (e.g. album tracks) if available, otherwise fall back to global songsData
+        const playlist = activePlaylist?.tracks?.length > 0 ? activePlaylist.tracks : activeAlbum?.tracks?.length > 0 ? activeAlbum.tracks : songsData;
+        if (playlist.length === 0) return;
+        const currentIndex = playlist.findIndex(s => s.id === track.id);
         let nextIndex = currentIndex + 1;
-        if (nextIndex >= songsData.length) nextIndex = 0;
-        playWithId(songsData[nextIndex].id);
+        if (nextIndex >= playlist.length) nextIndex = 0;
+        playWithId(playlist[nextIndex].id);
     }
 
 
@@ -342,7 +348,11 @@ const PlayerContextProvider = (props) => {
         getLikeCount,
         toggleFollow,
         isFollowing,
-        getFollowerCount
+        getFollowerCount,
+        activePlaylist,
+        activeAlbum,
+        setActivePlaylist,
+        setActiveAlbum
     };
 
     return (

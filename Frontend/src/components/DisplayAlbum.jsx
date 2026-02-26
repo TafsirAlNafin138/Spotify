@@ -8,7 +8,7 @@ import { useAlbum } from "../hooks/useAlbums";
 const DisplayAlbum = () => {
   const { id } = useParams();
   const { album, tracks, loading, error } = useAlbum(id);
-  const { playWithId, toggleFollow, isFollowing, getFollowerCount } = React.useContext(PlayerContext);
+  const { playWithId, setActiveAlbum, setActivePlaylist } = React.useContext(PlayerContext);
 
   const convertDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
@@ -100,7 +100,11 @@ const DisplayAlbum = () => {
             tracks.map((track, index) => (
               <div
                 key={track.id}
-                onClick={() => playWithId(track.id)}
+                onClick={() => {
+                  setActiveAlbum({ tracks });
+                  setActivePlaylist(null);
+                  playWithId(track.id);
+                }}
                 className="grid grid-cols-3 sm:grid-cols-4 items-center gap-4 py-2 px-2 rounded hover:bg-[#ffffff26] cursor-pointer"
               >
                 <p className="text-white">
