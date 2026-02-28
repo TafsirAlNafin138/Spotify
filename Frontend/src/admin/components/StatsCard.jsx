@@ -9,8 +9,8 @@ const StatsCard = ({ bgColor, icon: Icon, iconColor, label, value }) => {
                         <Icon className={`size-6 ${iconColor}`} />
                     </div>
                     <div>
-                        <p className='text-sm text-zinc-400'>{label}</p>
-                        <p className='text-2xl font-bold'>{value}</p>
+                        <p className='text-sm text-zinc-400 font-medium'>{label}</p>
+                        <p className='text-3xl font-bold text-white tracking-tight mt-1'>{value}</p>
                     </div>
                 </div>
             </CardContent>
