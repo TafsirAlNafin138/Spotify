@@ -1,11 +1,12 @@
 import React from "react";
 import { assets } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useUser } from '@clerk/clerk-react';
 
 const NavigationBar = ({ userName }) => {
     const navigate = useNavigate();
     const { user, isLoaded } = useUser();
+    const { pathname } = useLocation();
 
     const isAdmin =
         user?.publicMetadata?.role === "admin" ||
@@ -37,11 +38,13 @@ const NavigationBar = ({ userName }) => {
                     </p> */}
                 </div>
             </div>
-            <div className="flex items-center gap-2 mt-4">
-                <p className="bg-white text-black px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-200 transition">All</p>
-                <p className="bg-black text-white px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-800 transition">Music</p>
-                <p className="bg-black text-white px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-800 transition">Podcasts</p>
-            </div>
+            {pathname === "/" ? (
+                <div className="flex items-center gap-2 mt-4">
+                    <p className="bg-white text-black px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-200 transition">All</p>
+                    <p className="bg-black text-white px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-800 transition">Music</p>
+                    <p className="bg-black text-white px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-800 transition">Podcasts</p>
+                </div>
+            ) : null}
         </>
     )
 }

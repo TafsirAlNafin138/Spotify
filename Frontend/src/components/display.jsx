@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import DisplayHome from "./displayhome";
 import DisplayAlbum from "./DisplayAlbum";
+import LikedSongs from "./LikedSongs";
 
 import AdminPage from "../admin/AdminPage";
 
@@ -21,6 +22,7 @@ const Display = () => {
             <Routes>
                 <Route path="/" element={<DisplayHome />} />
                 <Route path="/album/:id" element={<DisplayAlbum />} />
+                <Route path="/liked-songs" element={<LikedSongs />} />
                 <Route path="/admin" element={<AdminPage />} />
             </Routes>
         </div>

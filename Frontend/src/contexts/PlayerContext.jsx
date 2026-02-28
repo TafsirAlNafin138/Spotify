@@ -33,6 +33,7 @@ const PlayerContextProvider = (props) => {
     const [isQueueOpen, setIsQueueOpen] = useState(false);
     const [activePlaylist, setActivePlaylist] = useState(null); // { tracks: [], name: '' }
     const [activeAlbum, setActiveAlbum] = useState(null); // { tracks: [], name: '' }
+    const [autoAdvance, setAutoAdvance] = useState(false); // only auto-advance when Play All is used
     const [likedSongs, setLikedSongs] = useState({});
     const [songLikes, setSongLikes] = useState({});
     const [followedArtists, setFollowedArtists] = useState(() => {
@@ -50,6 +51,8 @@ const PlayerContextProvider = (props) => {
     const seekBar = useRef();
     const volumeBg = useRef();
     const volumeBar = useRef();
+    const nextTrackRef = useRef();
+    const autoAdvanceRef = useRef(false);
 
     // Fetch songs from backend on mount
     useEffect(() => {
@@ -99,7 +102,13 @@ const PlayerContextProvider = (props) => {
         duration: formatDuration(t.duration)
     });
 
-    const playWithId = async (id) => {
+    const playWithId = async (id, options = { preserveAutoAdvance: false }) => {
+        // Single-track play: don't auto-advance when song ends, unless told to preserve it
+        if (!options.preserveAutoAdvance) {
+            setAutoAdvance(false);
+            autoAdvanceRef.current = false;
+        }
+
         // First check if the track is already in our loaded songsData
         const found = songsData.find(s => s.id === id);
         if (found) {
@@ -156,18 +165,37 @@ const PlayerContextProvider = (props) => {
         const currentIndex = playlist.findIndex(s => s.id === track.id);
         let prevIndex = currentIndex - 1;
         if (prevIndex < 0) prevIndex = playlist.length - 1;
-        playWithId(playlist[prevIndex].id);
+        playWithId(playlist[prevIndex].id, { preserveAutoAdvance: true });
     }
 
-    const nextTrack = () => {
+    const nextTrack = (isAutoAdvance = false) => {
         // Use activePlaylist (e.g. album tracks) if available, otherwise fall back to global songsData
         const playlist = activePlaylist?.tracks?.length > 0 ? activePlaylist.tracks : activeAlbum?.tracks?.length > 0 ? activeAlbum.tracks : songsData;
         if (playlist.length === 0) return;
+
         const currentIndex = playlist.findIndex(s => s.id === track.id);
         let nextIndex = currentIndex + 1;
-        if (nextIndex >= playlist.length) nextIndex = 0;
-        playWithId(playlist[nextIndex].id);
+
+        if (nextIndex >= playlist.length) {
+            // If this was an automatic advance at the end of the playlist, stop playing
+            if (isAutoAdvance) {
+                setAutoAdvance(false);
+                autoAdvanceRef.current = false;
+                setPlayerState(false);
+                return;
+            }
+            // Otherwise (manual button click), loop back to the start
+            nextIndex = 0;
+        }
+
+        playWithId(playlist[nextIndex].id, { preserveAutoAdvance: true });
     }
+
+    // Keep refs in sync so onended always reads the latest values
+    useEffect(() => {
+        nextTrackRef.current = nextTrack;
+        autoAdvanceRef.current = autoAdvance;
+    });
 
 
     const seekSong = async (e) => {
@@ -247,6 +275,15 @@ const PlayerContextProvider = (props) => {
                         }
                     }
                 };
+
+                // Auto-advance to next track only when Play All is active
+                audioRef.current.onended = () => {
+                    if (autoAdvanceRef.current && nextTrackRef.current) {
+                        nextTrackRef.current(true); // pass true to indicate this is an auto-advance
+                    } else {
+                        setPlayerState(false);
+                    }
+                };
             }
         }
             , 1000);
@@ -265,15 +302,56 @@ const PlayerContextProvider = (props) => {
         setPlayerState(false);
     }
 
-    const toggleLike = (songId) => {
-        setLikedSongs(prev => {
-            const liked = !prev[songId];
-            setSongLikes(p => ({
-                ...p,
-                [songId]: (songLikes[songId] > 0 ? songLikes[songId] : 0) + (liked ? 1 : -1),
+    // Fetch liked tracks from backend on mount
+    const fetchLikedTracks = useCallback(async () => {
+        try {
+            const response = await axiosInstance.get('/likes/my-likes');
+            const tracks = response.data.data || response.data;
+            const likedMap = {};
+            if (Array.isArray(tracks)) {
+                tracks.forEach(t => { likedMap[t.id] = true; });
+            }
+            setLikedSongs(likedMap);
+        } catch (err) {
+            console.error('Error fetching liked tracks:', err);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchLikedTracks();
+    }, [fetchLikedTracks]);
+
+    useEffect(() => {
+        if (track.id) {
+            axiosInstance.get(`/likes/count/${track.id}`)
+                .then(res => {
+                    const count = res.data.data?.count || 0;
+                    setSongLikes(prev => ({ ...prev, [track.id]: count }));
+                })
+                .catch(err => console.error('Error fetching like count:', err));
+        }
+    }, [track.id]);
+
+    const toggleLike = async (songId) => {
+        // Optimistic update
+        const wasLiked = likedSongs[songId] || false;
+        setLikedSongs(prev => ({ ...prev, [songId]: !wasLiked }));
+        setSongLikes(prev => ({
+            ...prev,
+            [songId]: Math.max(0, (prev[songId] || 0) + (wasLiked ? -1 : 1))
+        }));
+
+        try {
+            await axiosInstance.post(`/likes/toggle/${songId}`);
+        } catch (err) {
+            // Revert on failure
+            console.error('Error toggling like:', err);
+            setLikedSongs(prev => ({ ...prev, [songId]: wasLiked }));
+            setSongLikes(prev => ({
+                ...prev,
+                [songId]: Math.max(0, (prev[songId] || 0) + (wasLiked ? 1 : -1))
             }));
-            return { ...prev, [songId]: liked };
-        });
+        }
     }
 
     const isLiked = (songId) => {
@@ -346,13 +424,16 @@ const PlayerContextProvider = (props) => {
         toggleLike,
         isLiked,
         getLikeCount,
+        fetchLikedTracks,
         toggleFollow,
         isFollowing,
         getFollowerCount,
         activePlaylist,
         activeAlbum,
         setActivePlaylist,
-        setActiveAlbum
+        setActiveAlbum,
+        autoAdvance,
+        setAutoAdvance
     };
 
     return (

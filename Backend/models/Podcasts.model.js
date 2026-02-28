@@ -7,7 +7,7 @@ class Podcast {
             `INSERT INTO podcasts (title, host_name, description, cover_image) 
        VALUES ($1, $2, $3, $4) 
        RETURNING *`,
-            [title, host_name, description, cover_image]
+            [title.charAt(0).toUpperCase() + title.slice(1), host_name.charAt(0).toUpperCase() + host_name.slice(1), description, cover_image]
         );
         return result.rows[0];
     }
@@ -41,7 +41,7 @@ class Podcast {
            updated_at = NOW()
        WHERE id = $5 
        RETURNING *`,
-            [title, host_name, description, cover_image, id]
+            [title.charAt(0).toUpperCase() + title.slice(1), host_name.charAt(0).toUpperCase() + host_name.slice(1), description, cover_image, id]
         );
         return result.rows[0];
     }
@@ -92,7 +92,7 @@ class Podcast {
        WHERE title ILIKE $1 OR host_name ILIKE $1 OR description ILIKE $1
        ORDER BY title ASC 
        LIMIT $2`,
-            [`%${query}%`, limit]
+            [`%${query.charAt(0).toUpperCase() + query.slice(1)}%`, limit]
         );
         return result.rows;
     }

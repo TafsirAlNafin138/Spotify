@@ -18,7 +18,7 @@ import { runAllTests } from './utils/testConnection';
 
 
 export default function App() {
-  const { audioRef, track, playerState } = React.useContext(PlayerContext);
+  const { audioRef, track, playerState } = React.useContext(PlayerContext) || {};
   const [sidebarWidth, setSidebarWidth] = React.useState(20); // Default 20%
   const [isDragging, setIsDragging] = React.useState(false);
   const { isSignedIn } = useAuth();
@@ -35,7 +35,7 @@ export default function App() {
   }, [isSignedIn, connectionTested]);
 
   useEffect(() => {
-    if (audioRef.current && track.file) {
+    if (audioRef?.current && track?.file) {
       audioRef.current.src = track.file;
       audioRef.current.load();
       if (playerState) {

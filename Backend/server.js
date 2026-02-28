@@ -17,6 +17,7 @@ import trackRoutes from './routes/tracks.route.js';
 import statRoutes from './routes/stat.route.js';
 import userRoutes from './routes/user.route.js';
 import webhookRoutes from './routes/webhook.route.js';
+import likesRoutes from './routes/likes.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,6 +56,7 @@ app.use('/api/albums', albumRoutes);
 app.use('/api/tracks', trackRoutes);
 app.use('/api/stats', statRoutes);
 app.use('/api/users/history', userRoutes);
+app.use('/api/likes', likesRoutes);
 
 app.get("/", (req, res) => {
   res.send("Spotify API is running");

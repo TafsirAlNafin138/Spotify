@@ -7,7 +7,7 @@ class Artist {
       `INSERT INTO artists (name, bio, image) 
        VALUES ($1, $2, $3) 
        RETURNING *`,
-      [name, bio, image]
+      [name.charAt(0).toUpperCase() + name.slice(1), bio, image]
     );
     return result.rows[0];
   }
@@ -25,7 +25,7 @@ class Artist {
   static async findByName(name) {
     const result = await db.query(
       'SELECT * FROM artists WHERE name = $1',
-      [name]
+      [name.charAt(0).toUpperCase() + name.slice(1)]
     );
     return result.rows[0];
   }
@@ -49,7 +49,7 @@ class Artist {
            updated_at = NOW()
        WHERE id = $4 
        RETURNING *`,
-      [name, bio, image, id]
+      [name.charAt(0).toUpperCase() + name.slice(1), bio, image, id]
     );
     return result.rows[0];
   }
@@ -114,7 +114,7 @@ class Artist {
        WHERE name ILIKE $1 
        ORDER BY name ASC 
        LIMIT $2`,
-      [`%${query}%`, limit]
+      [`%${query.charAt(0).toUpperCase() + query.slice(1)}%`, limit]
     );
     return result.rows;
   }

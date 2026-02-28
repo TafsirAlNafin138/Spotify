@@ -52,7 +52,7 @@ const Player = () => {
                         :
                         <img onClick={play} className="w-5 cursor-pointer hover:scale-110 transition-transform" src={assets.play_icon} alt="Play" />
                     }
-                    <img onClick={nextTrack} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.next_icon} alt="" />
+                    <img onClick={() => nextTrack(false)} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.next_icon} alt="" />
                     <img onClick={loopSeek} className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.loop_icon} alt="" />
                 </div>
 

@@ -1,5 +1,5 @@
 import { useMusicStore } from "@/stores/useMusicStore";
-import { Library, ListMusic, PlayCircle, Users2 } from "lucide-react";
+import { Library, ListMusic, Users2, Layers, Mic } from "lucide-react";
 import StatsCard from "./StatsCard";
 
 const DashboardStats = () => {
@@ -28,28 +28,28 @@ const DashboardStats = () => {
             iconColor: "text-orange-500",
         },
         {
-            icon: PlayCircle,
+            icon: Users2,
             label: "Total Users",
             value: String(stats.totalUsers),
             bgColor: "bg-sky-500/10",
             iconColor: "text-sky-500",
         },
         {
-            icon: Users2,
+            icon: Layers,
             label: "Total Genres",
             value: String(stats.totalGenres),
             bgColor: "bg-sky-500/10",
             iconColor: "text-sky-500",
         },
         {
-            icon: Users2,
+            icon: Mic,
             label: "Total Podcasts",
             value: String(stats.totalPodcasts),
             bgColor: "bg-sky-500/10",
             iconColor: "text-sky-500",
         },
         {
-            icon: Users2,
+            icon: Mic,
             label: "Total Podcast Episodes",
             value: String(stats.totalEpisodes),
             bgColor: "bg-sky-500/10",

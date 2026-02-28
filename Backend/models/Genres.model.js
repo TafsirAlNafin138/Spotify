@@ -7,7 +7,7 @@ class Genre {
             `INSERT INTO genres (name, theme_color) 
        VALUES ($1, $2) 
        RETURNING *`,
-            [name, theme_color]
+            [name.charAt(0).toUpperCase() + name.slice(1), theme_color]
         );
         return result.rows[0];
     }
@@ -25,7 +25,7 @@ class Genre {
     static async findByName(name) {
         const result = await db.query(
             'SELECT * FROM genres WHERE name = $1',
-            [name]
+            [name.charAt(0).toUpperCase() + name.slice(1)]
         );
         return result.rows[0];
     }
@@ -45,7 +45,7 @@ class Genre {
        SET name = $1 
        WHERE id = $2 
        RETURNING *`,
-            [name, id]
+            [name.charAt(0).toUpperCase() + name.slice(1), id]
         );
         return result.rows[0];
     }
