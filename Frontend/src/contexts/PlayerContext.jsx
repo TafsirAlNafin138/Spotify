@@ -1,9 +1,11 @@
 import { createContext, useEffect, useRef, useState, useCallback } from "react"
 import { axiosInstance } from "../services/axios";
+import { useAuth } from "@clerk/clerk-react";
 
 const PlayerContext = createContext();
 
 const PlayerContextProvider = (props) => {
+    const { isSignedIn } = useAuth();
 
     const [songsData, setSongsData] = useState([]);
     const [songsLoading, setSongsLoading] = useState(true);
@@ -302,8 +304,13 @@ const PlayerContextProvider = (props) => {
         setPlayerState(false);
     }
 
-    // Fetch liked tracks from backend on mount
+    // Fetch liked tracks from backend on mount or sign in state change
     const fetchLikedTracks = useCallback(async () => {
+        if (!isSignedIn) {
+            setLikedSongs({});
+            return;
+        }
+
         try {
             const response = await axiosInstance.get('/likes/my-likes');
             const tracks = response.data.data || response.data;
@@ -315,7 +322,7 @@ const PlayerContextProvider = (props) => {
         } catch (err) {
             console.error('Error fetching liked tracks:', err);
         }
-    }, []);
+    }, [isSignedIn]);
 
     useEffect(() => {
         fetchLikedTracks();
