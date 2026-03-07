@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class Genre {
-    // Create a new genre
-    static async create({ name, theme_color }) {
-        const result = await db.query(
+    static async create({ name, theme_color }, client = db) {
+        const result = await client.query(
             `INSERT INTO genres (name, theme_color) 
        VALUES ($1, $2) 
        RETURNING *`,
@@ -38,9 +37,8 @@ class Genre {
         return result.rows;
     }
 
-    // Update genre
-    static async update(id, { name }) {
-        const result = await db.query(
+    static async update(id, { name }, client = db) {
+        const result = await client.query(
             `UPDATE genres 
        SET name = $1 
        WHERE id = $2 
@@ -50,9 +48,8 @@ class Genre {
         return result.rows[0];
     }
 
-    // Delete genre
-    static async delete(id) {
-        const result = await db.query(
+    static async delete(id, client = db) {
+        const result = await client.query(
             'DELETE FROM genres WHERE id = $1 RETURNING *',
             [id]
         );

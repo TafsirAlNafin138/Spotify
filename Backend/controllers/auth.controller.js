@@ -2,6 +2,7 @@ import User from '../models/User.model.js';
 import jwt from 'jsonwebtoken';
 import { uploadOnCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
+import db from '../config/database.js';
 
 const generateTokens = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET || 'secret123', {
@@ -38,12 +39,24 @@ export const register = async (req, res) => {
             }
         }
 
-        const user = await User.createUser({ name, email, password, image: imageUrl });
+        let user;
+        let tokens;
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            user = await User.createUser({ name, email, password, image: imageUrl }, client);
+            tokens = generateTokens(user.id);
+            // Save hashed refresh token to database
+            await User.saveRefreshToken(user.id, tokens.refreshToken, client);
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
 
-        const { accessToken, refreshToken } = generateTokens(user.id);
-
-        // Save hashed refresh token to database
-        await User.saveRefreshToken(user.id, refreshToken);
+        const { accessToken, refreshToken } = tokens;
 
         // Set refresh token in httpOnly cookie
         res.cookie('refreshToken', refreshToken, {
@@ -72,22 +85,36 @@ export const login = async (req, res) => {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
-        const user = await User.verifyPassword(email, password);
-        if (!user) {
-            return res.status(401).json({ success: false, message: "Invalid credentials" });
+        let user;
+        let tokens;
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            user = await User.verifyPassword(email, password, client);
+            if (!user) {
+                await client.query('ROLLBACK');
+                return res.status(401).json({ success: false, message: "Invalid credentials" });
+            }
+
+            tokens = generateTokens(user.id);
+            // Save hashed refresh token to database
+            await User.saveRefreshToken(user.id, tokens.refreshToken, client);
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
         }
 
-        const { accessToken, refreshToken } = generateTokens(user.id);
-
-        // Save hashed refresh token to database
-        await User.saveRefreshToken(user.id, refreshToken);
+        const { accessToken, refreshToken } = tokens;
 
         // Set refresh token in httpOnly cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'development',
             sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
         });
 
         res.status(200).json({ success: true, user, token: accessToken });
@@ -133,15 +160,25 @@ export const refreshToken = async (req, res) => {
         // Generate new tokens
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(userId);
 
-        // Save new hashed refresh token to database
-        await User.saveRefreshToken(userId, newRefreshToken);
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            // Save new hashed refresh token to database
+            await User.saveRefreshToken(userId, newRefreshToken, client);
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
 
         // Update cookie
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'development',
             sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
         });
 
         res.status(200).json({ success: true, token: accessToken });
@@ -155,9 +192,6 @@ export const logout = async (req, res) => {
     try {
         // Clear the refresh token cookie
         res.clearCookie('refreshToken');
-
-        // Optionally clear the token from the database if user is known
-        // if (req.userId) await db.query('UPDATE users SET refresh_token_hash = NULL WHERE id = $1', [req.userId]);
 
         res.status(200).json({ success: true, message: "Logged out successfully" });
     } catch (error) {

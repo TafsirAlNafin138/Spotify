@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class TrackGenre {
-    // Add genre to track
-    static async create(trackId, genreId) {
-        const result = await db.query(
+    static async create(trackId, genreId, client = db) {
+        const result = await client.query(
             `INSERT INTO track_genres (track_id, genre_id) 
        VALUES ($1, $2) 
        ON CONFLICT (track_id, genre_id) DO NOTHING
@@ -13,9 +12,8 @@ class TrackGenre {
         return result.rows[0];
     }
 
-    // Remove genre from track
-    static async delete(trackId, genreId) {
-        const result = await db.query(
+    static async delete(trackId, genreId, client = db) {
+        const result = await client.query(
             'DELETE FROM track_genres WHERE track_id = $1 AND genre_id = $2 RETURNING *',
             [trackId, genreId]
         );

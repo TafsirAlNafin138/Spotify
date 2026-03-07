@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class Podcast {
-    // Create a new podcast
-    static async create({ title, host_name, description, cover_image }) {
-        const result = await db.query(
+    static async create({ title, host_name, description, cover_image }, client = db) {
+        const result = await client.query(
             `INSERT INTO podcasts (title, host_name, description, cover_image) 
        VALUES ($1, $2, $3, $4) 
        RETURNING *`,
@@ -30,9 +29,8 @@ class Podcast {
         return result.rows;
     }
 
-    // Update podcast
-    static async update(id, { title, host_name, description, cover_image }) {
-        const result = await db.query(
+    static async update(id, { title, host_name, description, cover_image }, client = db) {
+        const result = await client.query(
             `UPDATE podcasts 
        SET title = COALESCE($1, title), 
            host_name = COALESCE($2, host_name),
@@ -46,9 +44,8 @@ class Podcast {
         return result.rows[0];
     }
 
-    // Delete podcast
-    static async delete(id) {
-        const result = await db.query(
+    static async delete(id, client = db) {
+        const result = await client.query(
             'DELETE FROM podcasts WHERE id = $1 RETURNING *',
             [id]
         );

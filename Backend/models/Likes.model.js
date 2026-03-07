@@ -2,8 +2,8 @@ import db from '../config/database.js';
 
 class Like {
     // Like a track
-    static async likeTrack(userId, trackId) {
-        const result = await db.query(
+    static async likeTrack(userId, trackId, client = db) {
+        const result = await client.query(
             `INSERT INTO likes (user_id, track_id) 
        VALUES ($1, $2) 
        ON CONFLICT (user_id, track_id) DO NOTHING
@@ -14,8 +14,8 @@ class Like {
     }
 
     // Unlike a track
-    static async unlikeTrack(userId, trackId) {
-        const result = await db.query(
+    static async unlikeTrack(userId, trackId, client = db) {
+        const result = await client.query(
             'DELETE FROM likes WHERE user_id = $1 AND track_id = $2 RETURNING *',
             [userId, trackId]
         );

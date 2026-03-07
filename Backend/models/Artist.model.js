@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class Artist {
-  // Create a new artist
-  static async create({ name, bio, image }) {
-    const result = await db.query(
+  static async create({ name, bio, image }, client = db) {
+    const result = await client.query(
       `INSERT INTO artists (name, bio, image) 
        VALUES ($1, $2, $3) 
        RETURNING *`,
@@ -39,9 +38,8 @@ class Artist {
     return result.rows;
   }
 
-  // Update artist
-  static async update(id, { name, bio, image }) {
-    const result = await db.query(
+  static async update(id, { name, bio, image }, client = db) {
+    const result = await client.query(
       `UPDATE artists 
        SET name = COALESCE($1, name), 
            bio = COALESCE($2, bio), 
@@ -54,9 +52,8 @@ class Artist {
     return result.rows[0];
   }
 
-  // Delete artist
-  static async delete(id) {
-    const result = await db.query(
+  static async delete(id, client = db) {
+    const result = await client.query(
       'DELETE FROM artists WHERE id = $1 RETURNING *',
       [id]
     );

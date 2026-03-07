@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class Track {
-  // Create a new track
-  static async create({ album_id, name, duration, path, image, track_number, is_explicit = false }) {
-    const result = await db.query(
+  static async create({ album_id, name, duration, path, image, track_number, is_explicit = false }, client = db) {
+    const result = await client.query(
       `INSERT INTO tracks (album_id, name, duration, path, image, track_number, is_explicit) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
@@ -30,9 +29,8 @@ class Track {
     return result.rows;
   }
 
-  // Update track
-  static async update(id, { album_id, name, duration, path, image, track_number, is_explicit }) {
-    const result = await db.query(
+  static async update(id, { album_id, name, duration, path, image, track_number, is_explicit }, client = db) {
+    const result = await client.query(
       `UPDATE tracks 
        SET album_id = COALESCE($1, album_id),
            name = COALESCE($2, name), 
@@ -49,18 +47,16 @@ class Track {
     return result.rows[0];
   }
 
-  // Delete track
-  static async delete(id) {
-    const result = await db.query(
+  static async delete(id, client = db) {
+    const result = await client.query(
       'DELETE FROM tracks WHERE id = $1 RETURNING *',
       [id]
     );
     return result.rows[0];
   }
 
-  // Add artist to track
-  static async addArtist(trackId, artistId, artistRole = 'Primary') {
-    const result = await db.query(
+  static async addArtist(trackId, artistId, artistRole = 'Primary', client = db) {
+    const result = await client.query(
       `INSERT INTO track_artists (track_id, artist_id, artist_role) 
        VALUES ($1, $2, $3) 
        ON CONFLICT (track_id, artist_id) DO UPDATE 
@@ -71,9 +67,8 @@ class Track {
     return result.rows[0];
   }
 
-  // Remove artist from track
-  static async removeArtist(trackId, artistId) {
-    const result = await db.query(
+  static async removeArtist(trackId, artistId, client = db) {
+    const result = await client.query(
       'DELETE FROM track_artists WHERE track_id = $1 AND artist_id = $2 RETURNING *',
       [trackId, artistId]
     );
@@ -98,9 +93,8 @@ class Track {
     return result.rows;
   }
 
-  // Add genre to track
-  static async addGenre(trackId, genreId) {
-    const result = await db.query(
+  static async addGenre(trackId, genreId, client = db) {
+    const result = await client.query(
       `INSERT INTO track_genres (track_id, genre_id) 
        VALUES ($1, $2) 
        ON CONFLICT (track_id, genre_id) DO NOTHING
@@ -110,9 +104,8 @@ class Track {
     return result.rows[0];
   }
 
-  // Remove genre from track
-  static async removeGenre(trackId, genreId) {
-    const result = await db.query(
+  static async removeGenre(trackId, genreId, client = db) {
+    const result = await client.query(
       'DELETE FROM track_genres WHERE track_id = $1 AND genre_id = $2 RETURNING *',
       [trackId, genreId]
     );

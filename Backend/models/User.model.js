@@ -4,11 +4,11 @@ import bcrypt from 'bcryptjs';
 
 class User {
   // new user with hashed password
-  static async createUser({ name, email, password, image }) {
+  static async createUser({ name, email, password, image }, client = db) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const result = await db.query(
+    const result = await client.query(
       `INSERT INTO users (name, email, password_hash, image) 
        VALUES ($1, $2, $3, $4) 
        RETURNING id, name, email, image, created_at`,
@@ -18,8 +18,8 @@ class User {
   }
 
   // Verify user password
-  static async verifyPassword(email, candidatePassword) {
-    const result = await db.query(
+  static async verifyPassword(email, candidatePassword, client = db) {
+    const result = await client.query(
       'SELECT * FROM users WHERE email = $1 AND is_active = true',
       [email]
     );
@@ -30,7 +30,7 @@ class User {
     if (!isMatch) return null;
 
     // Update last login
-    await db.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
+    await client.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
 
     const { password_hash, refresh_token_hash, ...userWithoutPassword } = user;
     // Return user without sensitive data
@@ -47,10 +47,10 @@ class User {
   }
 
   // Save refresh token
-  static async saveRefreshToken(id, refreshToken) {
+  static async saveRefreshToken(id, refreshToken, client = db) {
     const salt = await bcrypt.genSalt(10);
     const hashedToken = await bcrypt.hash(refreshToken, salt);
-    await db.query(
+    await client.query(
       'UPDATE users SET refresh_token_hash = $1 WHERE id = $2',
       [hashedToken, id]
     );

@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class AlbumAuthor {
-    // Add artist to album
-    static async create(albumId, artistId, isPrimary = true) {
-        const result = await db.query(
+    static async create(albumId, artistId, isPrimary = true, client = db) {
+        const result = await client.query(
             `INSERT INTO album_authors (album_id, artist_id, is_primary) 
        VALUES ($1, $2, $3) 
        RETURNING *`,
@@ -12,9 +11,8 @@ class AlbumAuthor {
         return result.rows[0];
     }
 
-    // Update primary status
-    static async updatePrimary(albumId, artistId, isPrimary) {
-        const result = await db.query(
+    static async updatePrimary(albumId, artistId, isPrimary, client = db) {
+        const result = await client.query(
             `UPDATE album_authors 
        SET is_primary = $1 
        WHERE album_id = $2 AND artist_id = $3 
@@ -24,9 +22,8 @@ class AlbumAuthor {
         return result.rows[0];
     }
 
-    // Remove artist from album
-    static async delete(albumId, artistId) {
-        const result = await db.query(
+    static async delete(albumId, artistId, client = db) {
+        const result = await client.query(
             'DELETE FROM album_authors WHERE album_id = $1 AND artist_id = $2 RETURNING *',
             [albumId, artistId]
         );

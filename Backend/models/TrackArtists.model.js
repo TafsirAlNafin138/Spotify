@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class TrackArtist {
-    // Add artist to track
-    static async create(trackId, artistId, artistRole = 'Primary') {
-        const result = await db.query(
+    static async create(trackId, artistId, artistRole = 'Primary', client = db) {
+        const result = await client.query(
             `INSERT INTO track_artists (track_id, artist_id, artist_role) 
        VALUES ($1, $2, $3) 
        RETURNING *`,
@@ -12,9 +11,8 @@ class TrackArtist {
         return result.rows[0];
     }
 
-    // Update artist role
-    static async updateRole(trackId, artistId, artistRole) {
-        const result = await db.query(
+    static async updateRole(trackId, artistId, artistRole, client = db) {
+        const result = await client.query(
             `UPDATE track_artists 
        SET artist_role = $1 
        WHERE track_id = $2 AND artist_id = $3 
@@ -24,9 +22,8 @@ class TrackArtist {
         return result.rows[0];
     }
 
-    // Remove artist from track
-    static async delete(trackId, artistId) {
-        const result = await db.query(
+    static async delete(trackId, artistId, client = db) {
+        const result = await client.query(
             'DELETE FROM track_artists WHERE track_id = $1 AND artist_id = $2 RETURNING *',
             [trackId, artistId]
         );

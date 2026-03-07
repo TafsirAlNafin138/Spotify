@@ -1,9 +1,8 @@
 import db from '../config/database.js';
 
 class Album {
-  // Create a new album
-  static async create({ name, image }) {
-    const result = await db.query(
+  static async create({ name, image }, client = db) {
+    const result = await client.query(
       `INSERT INTO albums (name, image) 
        VALUES ($1, $2) 
        RETURNING *`,
@@ -39,9 +38,8 @@ class Album {
     return result.rows;
   }
 
-  // Update album
-  static async update(id, { name, image }) {
-    const result = await db.query(
+  static async update(id, { name, image }, client = db) {
+    const result = await client.query(
       `UPDATE albums 
        SET name = COALESCE($1, name), 
            image = COALESCE($2, image),
@@ -53,18 +51,16 @@ class Album {
     return result.rows[0];
   }
 
-  // Delete album
-  static async delete(id) {
-    const result = await db.query(
+  static async delete(id, client = db) {
+    const result = await client.query(
       'DELETE FROM albums WHERE id = $1 RETURNING *',
       [id]
     );
     return result.rows[0];
   }
 
-  // Add artist to album
-  static async addArtist(albumId, artistId, isPrimary = true) {
-    const result = await db.query(
+  static async addArtist(albumId, artistId, isPrimary = true, client = db) {
+    const result = await client.query(
       `INSERT INTO album_authors (album_id, artist_id, is_primary) 
        VALUES ($1, $2, $3) 
        ON CONFLICT (album_id, artist_id) DO UPDATE 
@@ -75,9 +71,8 @@ class Album {
     return result.rows[0];
   }
 
-  // Remove artist from album
-  static async removeArtist(albumId, artistId) {
-    const result = await db.query(
+  static async removeArtist(albumId, artistId, client = db) {
+    const result = await client.query(
       'DELETE FROM album_authors WHERE album_id = $1 AND artist_id = $2 RETURNING *',
       [albumId, artistId]
     );
@@ -108,9 +103,8 @@ class Album {
     return result.rows;
   }
 
-  // Add genre to album
-  static async addGenre(albumId, genreId) {
-    const result = await db.query(
+  static async addGenre(albumId, genreId, client = db) {
+    const result = await client.query(
       `INSERT INTO album_genres (album_id, genre_id) 
        VALUES ($1, $2) 
        ON CONFLICT (album_id, genre_id) DO NOTHING
@@ -120,9 +114,8 @@ class Album {
     return result.rows[0];
   }
 
-  // Remove genre from album
-  static async removeGenre(albumId, genreId) {
-    const result = await db.query(
+  static async removeGenre(albumId, genreId, client = db) {
+    const result = await client.query(
       'DELETE FROM album_genres WHERE album_id = $1 AND genre_id = $2 RETURNING *',
       [albumId, genreId]
     );
