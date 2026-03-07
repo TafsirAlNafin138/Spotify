@@ -8,6 +8,6 @@ router.post("/toggle/:trackId", protectRoute, toggleLike);
 router.get("/my-likes", protectRoute, getLikedTracks);
 router.get("/check/:trackId", protectRoute, checkLiked);
 router.post("/check-multiple", protectRoute, checkMultipleLikes);
-router.get("/count/:trackId", getLikeCount);
+router.get("/count/:trackId", protectRoute, getLikeCount);
 
 export default router;

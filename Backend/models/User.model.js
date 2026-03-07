@@ -3,7 +3,7 @@ import db from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
 class User {
-  // Create a new user with hashed password
+  // new user with hashed password
   static async createUser({ name, email, password, image }) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -32,8 +32,8 @@ class User {
     // Update last login
     await db.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
 
-    // Return user without sensitive data
     const { password_hash, refresh_token_hash, ...userWithoutPassword } = user;
+    // Return user without sensitive data
     return userWithoutPassword;
   }
 

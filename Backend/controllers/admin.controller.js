@@ -755,7 +755,7 @@ export const deleteEpisode = async (req, res) => {
         const podcastId = req.params.id;
         // console.log("Deleting episode with ID:", episodeId);
         // console.log("All params:", req.params);
-        
+
         if (!episodeId) {
             return res.status(400).json(new ApiError(400, "Episode ID is required"));
         }

@@ -4,8 +4,8 @@ import { uploadOnCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
 
 const generateToken = (userId) => {
-    return jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', {
-        expiresIn: '7d',
+    return jwt.sign({ userId }, process.env.JWT_SECRET || 'secret123', {
+        expiresIn: '1d',
     });
 };
 
@@ -33,10 +33,10 @@ export const register = async (req, res) => {
         }
 
         const user = await User.createUser({ name, email, password, image: imageUrl });
-        
+
         const token = generateToken(user.id);
-        
-        res.status(201).json({ success: true, user, token });
+
+        res.status(200).json({ success: true, user, token });
     } catch (error) {
         console.error("Error in register:", error);
         res.status(500).json({ success: false, message: "Internal server error" });

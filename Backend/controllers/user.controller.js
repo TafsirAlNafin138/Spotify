@@ -31,14 +31,13 @@ export const getInitialHistory = async (req, res) => {
 
 export const getFollowedPodcasts = async (req, res) => {
     try {
-        const auth = req.auth();
+        const userId = req.userId;
 
-        if (!auth?.userId) {
+        if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = auth.userId;
 
-        const user = await User.findByClerkId(userId);
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));
@@ -54,13 +53,13 @@ export const getFollowedPodcasts = async (req, res) => {
 
 export const getTracksLintenHistory = async (req, res) => {
     try {
-        const auth = req.auth();
+        const userId = req.userId;
 
-        if (!auth?.userId) {
+        if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = auth.userId;
-        const user = await User.findByClerkId(userId);
+
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));
@@ -76,13 +75,13 @@ export const getTracksLintenHistory = async (req, res) => {
 
 export const getEpisodesLintenHistory = async (req, res) => {
     try {
-        const auth = req.auth();
+        const userId = req.userId;
 
-        if (!auth?.userId) {
+        if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = auth.userId;
-        const user = await User.findByClerkId(userId);
+
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));
@@ -98,13 +97,13 @@ export const getEpisodesLintenHistory = async (req, res) => {
 
 export const getUserPlaylists = async (req, res) => {
     try {
-        const auth = req.auth();
+        const userId = req.userId;
 
-        if (!auth?.userId) {
+        if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = auth.userId;
-        const user = await User.findByClerkId(userId);
+
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));

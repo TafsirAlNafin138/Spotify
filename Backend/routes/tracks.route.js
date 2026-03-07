@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getAllTracks, getTrackById, incrementPlayCount, disableCache } from "../controllers/Tracks.controller.js";
 import { protectRoute, requireAdmin } from "../middleware/auth.middleware.js";
-import { getMadeForYou, getNewReleases, getTrandingSongs } from "../controllers/Tracks.controller.js";
+import { getMadeForYou, getNewReleases, getTrandingSongs, incrementLikeCount } from "../controllers/Tracks.controller.js";
 const router = Router();
 
 // Apply no-cache middleware to all routes
