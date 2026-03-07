@@ -4,7 +4,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import { clerkMiddleware } from '@clerk/express';
 import fileUpload from 'express-fileupload';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -16,7 +15,6 @@ import albumRoutes from './routes/album.route.js';
 import trackRoutes from './routes/tracks.route.js';
 import statRoutes from './routes/stat.route.js';
 import userRoutes from './routes/user.route.js';
-import webhookRoutes from './routes/webhook.route.js';
 import likesRoutes from './routes/likes.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,8 +33,7 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 
-// Webhook Route - Placed before global JSON parser to handle raw body if needed
-app.use('/api/webhooks', webhookRoutes);
+// Webhook Route - Removed
 
 // Global Parsers
 app.use(express.json({ limit: '10mb' }));
@@ -47,7 +44,6 @@ app.use(fileUpload({
   tempFileDir: '/tmp/'
 }));
 app.use(cookieParser());
-app.use(clerkMiddleware());
 
 // API Routes
 app.use('/api/auth', authRoutes);

@@ -50,13 +50,13 @@ export const getTrandingSongs = async (req, res) => {
 
 export const getMadeForYou = async (req, res) => {
     try {
-        const userId = req.auth?.userId;
+        const userId = req.userId;
 
         if (!userId) {
             return res.status(401).json(new ApiError(401, "Unauthorized access"));
         }
 
-        const user = await User.findByClerkId(userId);
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));

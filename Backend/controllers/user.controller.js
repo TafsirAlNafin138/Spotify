@@ -9,13 +9,11 @@ import PlaylistTrack from "../models/PlaylistTracks.model.js";
 
 export const getInitialHistory = async (req, res) => {
     try {
-        const auth = req.auth();
-
-        if (!auth?.userId) {
+        const userId = req.userId;
+        if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = auth.userId;
-        const user = await User.findByClerkId(userId);
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json(new ApiError(404, "User not found"));

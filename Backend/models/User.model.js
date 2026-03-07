@@ -1,37 +1,56 @@
 
 import db from '../config/database.js';
+import bcrypt from 'bcryptjs';
 
 class User {
-  // Create or Update user from Clerk
-  static async createOrUpdate({ name, email, clerk_id, image }) {
+  // Create a new user with hashed password
+  static async createUser({ name, email, password, image }) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const result = await db.query(
-      `INSERT INTO users (name, email, clerk_id, image, password) 
-       VALUES ($1, $2, $3, $4, 'CLERK_AUTH') 
-       ON CONFLICT (clerk_id) DO UPDATE 
-       SET name = EXCLUDED.name, 
-           email = EXCLUDED.email, 
-           image = EXCLUDED.image, 
-           updated_at = NOW()
-       RETURNING *`,
-      [name, email, clerk_id, image]
+      `INSERT INTO users (name, email, password_hash, image) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING id, name, email, image, created_at`,
+      [name, email, hashedPassword, image || null]
     );
     return result.rows[0];
   }
 
-  // Find user by email
+  // Verify user password
+  static async verifyPassword(email, candidatePassword) {
+    const result = await db.query(
+      'SELECT * FROM users WHERE email = $1 AND is_active = true',
+      [email]
+    );
+    const user = result.rows[0];
+    if (!user) return null;
+
+    const isMatch = await bcrypt.compare(candidatePassword, user.password_hash);
+    if (!isMatch) return null;
+
+    // Update last login
+    await db.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
+
+    // Return user without sensitive data
+    const { password_hash, refresh_token_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  // Find user by Email
   static async findByEmail(email) {
     const result = await db.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT id, name, email, image, is_active, last_login_at, created_at FROM users WHERE email = $1',
       [email]
     );
     return result.rows[0];
   }
 
-  // Find user by Clerk ID
-  static async findByClerkId(clerkId) {
+  // Find user by ID
+  static async findById(id) {
     const result = await db.query(
-      'SELECT * FROM users WHERE clerk_id = $1',
-      [clerkId]
+      'SELECT id, name, email, image, is_active, last_login_at, created_at FROM users WHERE id = $1',
+      [id]
     );
     return result.rows[0];
   }
@@ -77,15 +96,6 @@ class User {
       'SELECT COUNT(*) as count FROM users'
     );
     return parseInt(result.rows[0].count);
-  }
-
-  // Delete user by Clerk ID
-  static async deleteByClerkId(clerkId) {
-    const result = await db.query(
-      'DELETE FROM users WHERE clerk_id = $1 RETURNING *',
-      [clerkId]
-    );
-    return result.rows[0];
   }
 }
 

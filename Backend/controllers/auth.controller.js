@@ -1,31 +1,84 @@
-
 import User from '../models/User.model.js';
+import jwt from 'jsonwebtoken';
+import { uploadOnCloudinary } from '../config/cloudinary.js';
+import fs from 'fs';
 
-export const authCallback = async (req, res) => {
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', {
+        expiresIn: '7d',
+    });
+};
+
+export const register = async (req, res) => {
+    let localFilePath = null;
     try {
-        const { id, clerk_id, email_addresses, first_name, last_name, image_url } = req.body;
+        const { name, email, password } = req.body;
 
-        // Accept either 'id' or 'clerk_id' field
-        const clerkUserId = id || clerk_id;
-
-        if (!clerkUserId || !email_addresses) {
+        if (!name || !email || !password) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
-        // Clerk uses 'emailAddress' (camelCase), not 'email_address'
-        const email = email_addresses[0]?.emailAddress || email_addresses[0]?.email_address;
-        const name = `${first_name || ''} ${last_name || ''}`.trim() || 'User';
+        const emailExists = await User.emailExists(email);
+        if (emailExists) {
+            return res.status(400).json({ success: false, message: "Email already in use" });
+        }
 
-        const user = await User.createOrUpdate({
-            clerk_id: clerkUserId,
-            email,
-            name,
-            image: image_url
-        });
+        let imageUrl = null;
+        if (req.files && req.files.image) {
+            localFilePath = req.files.image.tempFilePath;
+            const uploadResult = await uploadOnCloudinary(localFilePath);
+            if (uploadResult) {
+                imageUrl = uploadResult.secure_url;
+            }
+        }
+
+        const user = await User.createUser({ name, email, password, image: imageUrl });
+        
+        const token = generateToken(user.id);
+        
+        res.status(201).json({ success: true, user, token });
+    } catch (error) {
+        console.error("Error in register:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    } finally {
+        if (localFilePath && fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
+    }
+};
+
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const user = await User.verifyPassword(email, password);
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
+        }
+
+        const token = generateToken(user.id);
+
+        res.status(200).json({ success: true, user, token });
+    } catch (error) {
+        console.error("Error in login:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
 
         res.status(200).json({ success: true, user });
     } catch (error) {
-        console.error("Error in auth callback:", error);
+        console.error("Error in getMe:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };

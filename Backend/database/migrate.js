@@ -6,10 +6,14 @@ async function setupDatabase() {
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
-  password VARCHAR(100) NOT NULL,
-  clerk_id VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
   date_of_birth DATE,
   image VARCHAR(255),
+
+  refresh_token_hash VARCHAR(255),
+  last_login_at TIMESTAMP,
+  is_active BOOLEAN DEFAULT TRUE,
+
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

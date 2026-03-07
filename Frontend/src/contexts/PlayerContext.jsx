@@ -1,11 +1,12 @@
 import { createContext, useEffect, useRef, useState, useCallback } from "react"
 import { axiosInstance } from "../services/axios";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "../providers/AuthProvider.jsx";
 
 const PlayerContext = createContext();
 
 const PlayerContextProvider = (props) => {
-    const { isSignedIn } = useAuth();
+    const { user, loading } = useAuth();
+    const isSignedIn = !!user;
 
     const [songsData, setSongsData] = useState([]);
     const [songsLoading, setSongsLoading] = useState(true);

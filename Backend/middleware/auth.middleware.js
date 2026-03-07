@@ -1,52 +1,47 @@
-import { clerkClient } from "@clerk/express";
-import ApiError from "../utils/ApiError.js";
+import jwt from 'jsonwebtoken';
+import db from '../config/database.js';
 
 export const protectRoute = async (req, res, next) => {
     try {
-        const auth = req.auth();
+        const token = req.headers.authorization?.split(' ')[1];
 
-        if (!auth?.userId) {
-            return res.status(401).json({ message: "Unauthorized" });
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized: No token provided" });
         }
 
-        req.userId = auth.userId;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        req.userId = decoded.userId;
         next();
     } catch (error) {
         console.error("Error in auth middleware:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
 };
 
-
-
 export const requireAdmin = async (req, res, next) => {
     try {
-        const auth = req.auth();
-
-        if (!auth?.userId) {
+        if (!req.userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const current_user = await clerkClient.users.getUser(auth.userId);
-        if (!current_user) {
+        const result = await db.query('SELECT email FROM users WHERE id = $1', [req.userId]);
+        const user = result.rows[0];
+
+        if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const userEmails = current_user.emailAddresses.map(e => e.emailAddress);
         const adminEmails = [
             process.env.ADMIN_EMAIL1?.trim(),
             process.env.ADMIN_EMAIL2?.trim()
         ].filter(Boolean);
 
-        const isAdmin =
-            userEmails.some(email => adminEmails.includes(email)) ||
-            current_user.publicMetadata?.role === "admin";
+        const isAdmin = adminEmails.includes(user.email);
 
         if (!isAdmin) {
             return res.status(403).json({ message: "Forbidden: Admin access required" });
         }
 
-        req.userId = auth.userId;
         next();
     } catch (error) {
         console.error("Error in admin middleware:", error);

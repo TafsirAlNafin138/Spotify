@@ -4,11 +4,9 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import TrackArtist from "../models/TrackArtists.model.js";
 
-// Helper to resolve Clerk userId to DB user
 const resolveUser = async (req) => {
-    const auth = req.auth();
-    if (!auth?.userId) return null;
-    return User.findByClerkId(auth.userId);
+    if (!req.userId) return null;
+    return User.findById(req.userId);
 };
 
 // POST /api/likes/toggle/:trackId

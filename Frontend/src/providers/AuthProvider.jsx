@@ -1,72 +1,79 @@
-import { useAuth, useUser } from "@clerk/clerk-react";
-import { axiosInstance } from "../services/axios";
-import { useState, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
+import { axiosInstance } from '../services/axios';
 
-const AuthProvider = ({ children }) => {
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { getToken, isSignedIn } = useAuth();
-    const { user } = useUser();
-    const getTokenRef = useRef(getToken);
 
-    // Keep the ref up-to-date with the latest getToken function
+    const checkAuthStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const res = await axiosInstance.get('/auth/me');
+                setUser(res.data.user);
+            }
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            localStorage.removeItem('token');
+            setUser(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        getTokenRef.current = getToken;
-    }, [getToken]);
+        checkAuthStatus();
+    }, []);
 
-    // Set up Axios interceptor to attach a fresh token on every request
     useEffect(() => {
         const interceptor = axiosInstance.interceptors.request.use(
-            async (config) => {
-                try {
-                    const token = await getTokenRef.current();
-                    if (token) {
-                        config.headers.Authorization = `Bearer ${token}`;
-                    } else {
-                        delete config.headers.Authorization;
-                    }
-                } catch (error) {
-                    console.error("❌ Error getting auth token:", error);
+            (config) => {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                } else {
+                    delete config.headers.Authorization;
                 }
                 return config;
             },
             (error) => Promise.reject(error)
         );
 
-        // Clean up the interceptor when the component unmounts
         return () => {
             axiosInstance.interceptors.request.eject(interceptor);
         };
     }, []);
 
-    // Sync user data with the backend on sign-in
-    useEffect(() => {
-        const syncUser = async () => {
-            try {
-                if (!isSignedIn) {
-                    setLoading(false);
-                    return;
-                }
+    const login = async (email, password) => {
+        const res = await axiosInstance.post('/auth/login', { email, password });
+        localStorage.setItem('token', res.data.token);
+        setUser(res.data.user);
+        return res.data;
+    };
 
-                if (user) {
-                    const res = await axiosInstance.post('/auth/callback', {
-                        clerk_id: user.id,
-                        email_addresses: user.emailAddresses,
-                        first_name: user.firstName,
-                        last_name: user.lastName,
-                        image_url: user.imageUrl,
-                    });
-                    console.log("✅ User synced:", res.data);
-                }
-                setLoading(false);
-            } catch (error) {
-                console.error("❌ Error syncing user:", error.response?.data || error.message);
-                setLoading(false);
+    const register = async (formData) => {
+        const res = await axiosInstance.post('/auth/register', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
             }
-        };
-        syncUser();
-    }, [isSignedIn, user]);
+        });
+        localStorage.setItem('token', res.data.token);
+        setUser(res.data.user);
+        return res.data;
+    };
 
-    return <>{children}</>;
+    const logout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+            {!loading && children}
+        </AuthContext.Provider>
+    );
 };
 
-export default AuthProvider;
+export const useAuth = () => useContext(AuthContext);
