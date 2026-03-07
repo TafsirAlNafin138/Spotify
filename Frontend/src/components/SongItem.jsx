@@ -6,14 +6,14 @@ const SongItem = ({ image, name, desc, id }) => {
     const liked = isLiked(id);
 
     return (
-        <div className="min-w-[180px] h-auto p-2 px-3 rounded cursor-pointer hover:bg-[#ffffff26] transition group relative">
+        <div className="min-w-[180px] max-w-[180px] w-[180px] flex-shrink-0 h-auto p-2 px-3 rounded cursor-pointer hover:bg-[#ffffff26] transition group relative">
             <div onClick={() => {
                 setActiveAlbum(null);
                 setActivePlaylist(null);
                 playWithId(id);
             }}>
                 <div className="relative">
-                    <img className="rounded mb-4 w-full" src={image} alt="" />
+                    <img className="rounded mb-4 w-full aspect-square object-cover" src={image} alt="" />
                     {/* Play button overlay on hover */}
                     <div className="absolute bottom-6 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
@@ -23,8 +23,8 @@ const SongItem = ({ image, name, desc, id }) => {
                         </div>
                     </div>
                 </div>
-                <p className="font-bold mt-2 mb-2">{name}</p>
-                <p className="text-sm text-slate-400">{desc}</p>
+                <p className="font-bold mt-2 mb-2 truncate">{name}</p>
+                <p className="text-sm text-slate-400 truncate">{desc}</p>
             </div>
             {/* Heart icon — visible on hover or if liked */}
             <button
