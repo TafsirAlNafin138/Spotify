@@ -46,6 +46,28 @@ class User {
     return result.rows[0];
   }
 
+  // Save refresh token
+  static async saveRefreshToken(id, refreshToken) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedToken = await bcrypt.hash(refreshToken, salt);
+    await db.query(
+      'UPDATE users SET refresh_token_hash = $1 WHERE id = $2',
+      [hashedToken, id]
+    );
+  }
+
+  // Verify refresh token
+  static async verifyRefreshToken(id, candidateToken) {
+    const result = await db.query(
+      'SELECT refresh_token_hash FROM users WHERE id = $1 AND is_active = true',
+      [id]
+    );
+    const user = result.rows[0];
+    if (!user || !user.refresh_token_hash) return false;
+
+    return await bcrypt.compare(candidateToken, user.refresh_token_hash);
+  }
+
   // Find user by ID
   static async findById(id) {
     const result = await db.query(

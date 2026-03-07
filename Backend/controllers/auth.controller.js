@@ -3,10 +3,16 @@ import jwt from 'jsonwebtoken';
 import { uploadOnCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
 
-const generateToken = (userId) => {
-    return jwt.sign({ userId }, process.env.JWT_SECRET || 'secret123', {
+const generateTokens = (userId) => {
+    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET || 'secret123', {
+        expiresIn: '15m',
+    });
+
+    const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET || 'refreshSecret123', {
         expiresIn: '1d',
     });
+
+    return { accessToken, refreshToken };
 };
 
 export const register = async (req, res) => {
@@ -34,9 +40,20 @@ export const register = async (req, res) => {
 
         const user = await User.createUser({ name, email, password, image: imageUrl });
 
-        const token = generateToken(user.id);
+        const { accessToken, refreshToken } = generateTokens(user.id);
 
-        res.status(200).json({ success: true, user, token });
+        // Save hashed refresh token to database
+        await User.saveRefreshToken(user.id, refreshToken);
+
+        // Set refresh token in httpOnly cookie
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'development',
+            sameSite: 'strict',
+            maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
+        });
+
+        res.status(200).json({ success: true, user, token: accessToken });
     } catch (error) {
         console.error("Error in register:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -60,9 +77,20 @@ export const login = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
 
-        const token = generateToken(user.id);
+        const { accessToken, refreshToken } = generateTokens(user.id);
 
-        res.status(200).json({ success: true, user, token });
+        // Save hashed refresh token to database
+        await User.saveRefreshToken(user.id, refreshToken);
+
+        // Set refresh token in httpOnly cookie
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.status(200).json({ success: true, user, token: accessToken });
     } catch (error) {
         console.error("Error in login:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -79,6 +107,61 @@ export const getMe = async (req, res) => {
         res.status(200).json({ success: true, user });
     } catch (error) {
         console.error("Error in getMe:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const refreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: "Refresh token not found" });
+        }
+
+        // Verify the refresh token's signature
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refreshSecret123');
+        const userId = decoded.userId;
+
+        // Verify the token against the hash in the database
+        const isValid = await User.verifyRefreshToken(userId, refreshToken);
+
+        if (!isValid) {
+            return res.status(403).json({ success: false, message: "Invalid refresh token" });
+        }
+
+        // Generate new tokens
+        const { accessToken, refreshToken: newRefreshToken } = generateTokens(userId);
+
+        // Save new hashed refresh token to database
+        await User.saveRefreshToken(userId, newRefreshToken);
+
+        // Update cookie
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.status(200).json({ success: true, token: accessToken });
+    } catch (error) {
+        console.error("Error in refreshToken:", error);
+        return res.status(403).json({ success: false, message: "Invalid or expired refresh token" });
+    }
+};
+
+export const logout = async (req, res) => {
+    try {
+        // Clear the refresh token cookie
+        res.clearCookie('refreshToken');
+
+        // Optionally clear the token from the database if user is known
+        // if (req.userId) await db.query('UPDATE users SET refresh_token_hash = NULL WHERE id = $1', [req.userId]);
+
+        res.status(200).json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+        console.error("Error in logout:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };

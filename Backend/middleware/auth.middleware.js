@@ -13,8 +13,13 @@ export const protectRoute = async (req, res, next) => {
         req.userId = decoded.userId;
         next();
     } catch (error) {
-        console.error("Error in auth middleware:", error);
-        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+        console.error("Error in auth middleware:", error.message);
+
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: "Token expired" });
+        }
+
+        return res.status(403).json({ message: "Unauthorized: Invalid token" });
     }
 };
 
