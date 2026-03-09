@@ -50,6 +50,10 @@ const PlayerContextProvider = (props) => {
         return saved ? JSON.parse(saved) : {};
     });
 
+    // NEW: Followed Podcasts State
+    const [followedPodcasts, setFollowedPodcasts] = useState({});
+    const [podcastFollowers, setPodcastFollowers] = useState({});
+
 
     const audioRef = useRef();
     const seekBg = useRef();
@@ -275,6 +279,9 @@ const PlayerContextProvider = (props) => {
         if (audioRef.current) {
             setTimeout(async () => {
                 try {
+                    if (options.startTime) {
+                        audioRef.current.currentTime = options.startTime;
+                    }
                     await audioRef.current.play();
                     setPlayerState(true);
                 } catch (err) {
@@ -283,8 +290,9 @@ const PlayerContextProvider = (props) => {
             }, 100);
         }
 
+        const startSec = options.startTime || 0;
         setTrackProgress({
-            currentTime: { seconds: 0, minutes: 0 },
+            currentTime: { seconds: Math.floor(startSec % 60), minutes: Math.floor(startSec / 60) },
             duration: { seconds: 0, minutes: 0 }
         });
 
@@ -433,6 +441,7 @@ const PlayerContextProvider = (props) => {
     const fetchLikedTracks = useCallback(async () => {
         if (!isSignedIn) {
             setLikedSongs({});
+            setFollowedPodcasts({});
             return;
         }
 
@@ -447,7 +456,20 @@ const PlayerContextProvider = (props) => {
         } catch (err) {
             console.error('Error fetching liked tracks:', err);
         }
-    }, [isSignedIn]);
+
+        // Also fetch followed podcasts
+        try {
+            const response = await axiosInstance.get(`/podcast-followers/my-podcasts`);
+            const podcasts = response.data.data || response.data;
+            const podcastMap = {};
+            if (Array.isArray(podcasts)) {
+                podcasts.forEach(p => { podcastMap[p.id] = true; });
+            }
+            setFollowedPodcasts(podcastMap);
+        } catch (err) {
+            console.error('Error fetching followed podcasts:', err);
+        }
+    }, [isSignedIn, user?.id]);
 
     useEffect(() => {
         fetchLikedTracks();
@@ -531,6 +553,48 @@ const PlayerContextProvider = (props) => {
         localStorage.setItem('spotifyArtistFollowers', JSON.stringify(artistFollowers));
     }, [artistFollowers]);
 
+    // ==================== PODCAST FOLLOW FUNCTIONALITY ====================
+
+    const togglePodcastFollow = async (podcastId) => {
+        if (!isSignedIn) return;
+
+        const isCurrentlyFollowing = followedPodcasts[podcastId] || false;
+
+        // Optimistic update
+        setFollowedPodcasts(prev => ({
+            ...prev,
+            [podcastId]: !isCurrentlyFollowing
+        }));
+        setPodcastFollowers(prev => ({
+            ...prev,
+            [podcastId]: Math.max(0, (prev[podcastId] || 0) + (isCurrentlyFollowing ? -1 : 1))
+        }));
+
+        try {
+            // Note: togglePodcastFollow backend endpoint is a POST that automatically toggles
+            await axiosInstance.post(`/podcast-followers/toggle/${podcastId}`);
+        } catch (err) {
+            // Revert on failure
+            console.error('Error toggling podcast follow:', err);
+            setFollowedPodcasts(prev => ({
+                ...prev,
+                [podcastId]: isCurrentlyFollowing
+            }));
+            setPodcastFollowers(prev => ({
+                ...prev,
+                [podcastId]: Math.max(0, (prev[podcastId] || 0) + (isCurrentlyFollowing ? 1 : -1))
+            }));
+        }
+    }
+
+    const isPodcastFollowed = (podcastId) => {
+        return followedPodcasts[podcastId] || false;
+    }
+
+    const getPodcastFollowerCount = (podcastId) => {
+        return podcastFollowers[podcastId] || 0;
+    }
+
     const contextValue = {
         // Add state and functions related to the player here
         audioRef,
@@ -568,7 +632,13 @@ const PlayerContextProvider = (props) => {
         setActiveEpisodeList,
         autoAdvance,
         setAutoAdvance,
-        playEpisodeWithId
+        playEpisodeWithId,
+        followedPodcasts,
+        togglePodcastFollow,
+        isPodcastFollowed,
+        podcastFollowers,
+        setPodcastFollowers,
+        getPodcastFollowerCount
     };
 
     return (

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const DisplayHistory = () => {
     const { user } = useAuth();
-    const { playWithId } = useContext(PlayerContext);
+    const { playWithId, playEpisodeWithId } = useContext(PlayerContext);
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('tracks');
 
@@ -138,6 +138,20 @@ const DisplayHistory = () => {
                                 <div
                                     key={`${item.episode_id || item.id}-${index}`}
                                     className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 rounded-md hover:bg-[#ffffff26] cursor-pointer transition group"
+                                    onClick={() => {
+                                        navigate(`/podcast/${item.podcast_id || item.podcast_id_field || item.id}`);
+                                        // Wait a tiny bit for the route to load before trying to play it
+                                        setTimeout(() => {
+                                            const formattedEpisode = {
+                                                id: item.episode_id || item.id,
+                                                title: item.title,
+                                                cover_image: item.cover_image,
+                                                audio_path: item.audio_path,
+                                                duration: item.duration,
+                                            };
+                                            playEpisodeWithId(item.episode_id || item.id, [formattedEpisode], item.cover_image, { startTime: item.progress_seconds || 0 });
+                                        }, 100);
+                                    }}
                                 >
                                     <div className="w-12 h-12 relative flex-shrink-0">
                                         <img src={item.cover_image} alt={item.title} className="w-full h-full rounded object-cover" />

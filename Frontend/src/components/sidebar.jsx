@@ -56,6 +56,25 @@ const Sidebar = () => {
                             </p>
                         </div>
                     </div>
+
+                    <div
+                        onClick={() => navigate('/followed-podcasts')}
+                        className='flex items-center gap-4 px-3 py-2 cursor-pointer rounded-md transition-all duration-300 hover:bg-[#1a1a1a] group'
+                    >
+                        <div className="w-12 h-12 rounded flex items-center justify-center bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-500 shadow-lg group-hover:shadow-teal-500/20 transition-all duration-300">
+                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </div>
+                        <div className="flex flex-col">
+                            <p className='font-bold text-white text-[15px]'>Followed Podcasts</p>
+                            <p className='text-[13px] text-zinc-400 font-medium flex gap-1 items-center mt-0.5'>
+                                <span className="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
+                                Podcasts
+                            </p>
+                        </div>
+                    </div>
+
                     <div className='p-4 bg-[#242424] hover:bg-[#2a2a2a] transition-colors duration-300 rounded-xl flex flex-col items-start justify-start gap-5 mt-2'>
                         <div className="flex flex-col gap-1.5">
                             <h1 className='text-white font-bold text-[15px]'>Create your first playlist</h1>

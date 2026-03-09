@@ -75,25 +75,28 @@ const Player = () => {
 
             <div className="hidden lg:flex items-center gap-3 w-[25%] justify-end">
                 {/* <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" /> */}
-                <div className="relative flex items-center gap-1">
-                    <svg
-                        onClick={() => toggleLike(track.id)}
-                        onMouseEnter={() => setShowLikeCount(true)}
-                        onMouseLeave={() => setShowLikeCount(false)}
-                        className={`w-5 h-5 cursor-pointer hover:scale-110 transition-all ${isLiked(track.id) ? 'fill-green-500 text-green-500' : 'fill-none text-white hover:text-green-400'
-                            }`}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                    >
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    {showLikeCount && (
-                        <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                            {getLikeCount(track.id)} {getLikeCount(track.id) === 1 ? 'like' : 'likes'}
-                        </span>
-                    )}
-                </div>
+                {/* Like button – hidden when an episode is playing */}
+                {!track._isEpisode && (
+                    <div className="relative flex items-center gap-1">
+                        <svg
+                            onClick={() => toggleLike(track.id)}
+                            onMouseEnter={() => setShowLikeCount(true)}
+                            onMouseLeave={() => setShowLikeCount(false)}
+                            className={`w-5 h-5 cursor-pointer hover:scale-110 transition-all ${isLiked(track.id) ? 'fill-green-500 text-green-500' : 'fill-none text-white hover:text-green-400'
+                                }`}
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                        >
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        {showLikeCount && (
+                            <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                {getLikeCount(track.id)} {getLikeCount(track.id) === 1 ? 'like' : 'likes'}
+                            </span>
+                        )}
+                    </div>
+                )}
                 <img className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all" src={assets.queue_icon} alt="Queue" />
                 <div className="flex items-center gap-2 group">
                     <svg className="w-4 h-4 cursor-pointer text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { getFollowedPodcasts, getTracksLintenHistory, getEpisodesLintenHistory, getInitialHistory, saveTrackHistory, saveEpisodeHistory } from "../controllers/user.controller.js";
+import {
+    getTracksLintenHistory,
+    getEpisodesLintenHistory,
+    getInitialHistory,
+    saveTrackHistory,
+    saveEpisodeHistory
+} from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -7,7 +13,6 @@ const router = Router();
 router.use(protectRoute);
 
 router.get("/:userId", getInitialHistory);
-router.get("/:userId/followed-podcasts", getFollowedPodcasts);
 router.get("/:userId/tracks-linten-history", getTracksLintenHistory);
 router.get("/:userId/episodes-linten-history", getEpisodesLintenHistory);
 

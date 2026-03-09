@@ -7,6 +7,7 @@ import DisplaySearch from "./DisplaySearch";
 import DisplayHistory from "./DisplayHistory";
 import DisplayPodcast from "./DisplayPodcast";
 import LikedSongs from "./LikedSongs";
+import FollowedPodcasts from "./FollowedPodcasts";
 
 import AdminPage from "../admin/AdminPage";
 
@@ -31,6 +32,7 @@ const Display = () => {
                 <Route path="/podcast/:id" element={<DisplayPodcast />} />
                 <Route path="/artist/:id" element={<DisplayArtist />} />
                 <Route path="/liked-songs" element={<LikedSongs />} />
+                <Route path="/followed-podcasts" element={<FollowedPodcasts />} />
                 <Route path="/admin" element={<AdminPage />} />
             </Routes>
         </div>

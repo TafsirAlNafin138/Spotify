@@ -4,6 +4,7 @@ import NavigationBar from "./NavigationBar";
 import { assets } from "../assets/assets";
 import { usePodcast } from "../hooks/usePodcasts";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
+import { axiosInstance } from "../services/axios";
 
 const DisplayPodcast = () => {
     const { id } = useParams();
@@ -15,8 +16,23 @@ const DisplayPodcast = () => {
         setActivePlaylist,
         setAutoAdvance,
         track,
-        playerState
+        playerState,
+        isPodcastFollowed,
+        togglePodcastFollow,
+        getPodcastFollowerCount,
+        setPodcastFollowers
     } = React.useContext(PlayerContext);
+
+    React.useEffect(() => {
+        if (podcast?.id) {
+            axiosInstance.get(`/podcast-followers/count/${podcast.id}`)
+                .then(res => {
+                    const count = res.data.data?.count || 0;
+                    setPodcastFollowers(prev => ({ ...prev, [podcast.id]: count }));
+                })
+                .catch(err => console.error('Error fetching podcast follower count:', err));
+        }
+    }, [podcast?.id, setPodcastFollowers]);
 
     const convertDuration = (duration) => {
         if (!duration) return "0:00";
@@ -87,14 +103,15 @@ const DisplayPodcast = () => {
                                 className="w-6 inline-block mr-2"
                             />
                             <b>{podcast.host_name} </b>
+                            &#8226; <span>{getPodcastFollowerCount(podcast.id)} {getPodcastFollowerCount(podcast.id) === 1 ? 'follower' : 'followers'} </span>
                             &#8226; <b>{episodes?.length || 0} episodes </b>
                         </p>
                     </div>
                 </div>
 
-                {/* Play All button */}
-                {episodes && episodes.length > 0 && (
-                    <div className="flex items-center gap-4 mb-6 pl-2">
+                {/* Action Buttons */}
+                <div className="flex items-center gap-4 mb-6 pl-2">
+                    {episodes && episodes.length > 0 && (
                         <button
                             onClick={handlePlayAll}
                             className="bg-green-500 hover:bg-green-400 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:scale-105 transition-all"
@@ -103,8 +120,17 @@ const DisplayPodcast = () => {
                                 <path d="M8 5v14l11-7z" />
                             </svg>
                         </button>
-                    </div>
-                )}
+                    )}
+
+                    <button
+                        onClick={() => togglePodcastFollow(podcast.id)}
+                        className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow border rounded-full ${isPodcastFollowed(podcast.id)
+                            ? 'bg-transparent border-white text-white hover:border-gray-400 hover:text-gray-300'
+                            : 'bg-transparent border-gray-400 text-white hover:border-white hover:scale-105'}`}
+                    >
+                        {isPodcastFollowed(podcast.id) ? 'Following' : 'Follow'}
+                    </button>
+                </div>
 
                 {/* Episodes Header */}
                 <div className="grid grid-cols-[16px_1fr_80px] mt-4 mb-4 pl-2 text-[#a7a7a7] gap-4 items-center">
