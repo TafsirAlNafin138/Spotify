@@ -104,3 +104,4 @@ export const toggleFollowArtist = async (req, res) => {
         return res.status(500).json(new ApiError(500, "Internal server error", error));
     }
 }
+

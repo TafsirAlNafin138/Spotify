@@ -181,7 +181,7 @@ const PlayerContextProvider = (props) => {
         // Save track to listening history
         lastHistoryUpdate.current = startSec;
         try {
-            await axiosInstance.post('/users/history/tracks', { trackId: id, progressSeconds: Math.floor(startSec), isCompleted: false });
+            await axiosInstance.post(`/users/history/${user.id}/tracks`, { trackId: id, progressSeconds: Math.floor(startSec), isCompleted: false });
         } catch (err) {
             console.error('Failed to save track history:', err);
         }
@@ -299,7 +299,7 @@ const PlayerContextProvider = (props) => {
         // Save episode to listening history
         lastHistoryUpdate.current = 0;
         try {
-            await axiosInstance.post('/users/history/episodes', { episodeId: id, progressSeconds: 0, isCompleted: false });
+            await axiosInstance.post(`/users/history/${user.id}/episodes`, { episodeId: id, progressSeconds: 0, isCompleted: false });
         } catch (err) {
             console.error('Failed to save episode history:', err);
         }
@@ -394,13 +394,13 @@ const PlayerContextProvider = (props) => {
                             const isCompleted = (currentTime / duration) > 0.9;
                             if (track && track.id) {
                                 if (track._isEpisode) {
-                                    axiosInstance.post('/users/history/episodes', {
+                                    axiosInstance.post(`/users/history/${user.id}/episodes`, {
                                         episodeId: track.id,
                                         progressSeconds: Math.floor(currentTime),
                                         isCompleted
                                     }).catch(() => { });
                                 } else {
-                                    axiosInstance.post('/users/history/tracks', {
+                                    axiosInstance.post(`/users/history/${user.id}/tracks`, {
                                         trackId: track.id,
                                         progressSeconds: Math.floor(currentTime),
                                         isCompleted

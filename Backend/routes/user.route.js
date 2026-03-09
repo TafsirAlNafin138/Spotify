@@ -4,7 +4,8 @@ import {
     getEpisodesLintenHistory,
     getInitialHistory,
     saveTrackHistory,
-    saveEpisodeHistory
+    saveEpisodeHistory,
+    getFollowedArtists
 } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -15,8 +16,8 @@ router.use(protectRoute);
 router.get("/:userId", getInitialHistory);
 router.get("/:userId/tracks-linten-history", getTracksLintenHistory);
 router.get("/:userId/episodes-linten-history", getEpisodesLintenHistory);
-
-router.post("/tracks", saveTrackHistory);
-router.post("/episodes", saveEpisodeHistory);
+router.get("/:userId/my-followed-artists", getFollowedArtists);
+router.post("/:userId/tracks", saveTrackHistory);
+router.post("/:userId/episodes", saveEpisodeHistory);
 
 export default router;

@@ -5,6 +5,7 @@ import PodcastFollower from "../models/PodcastsFollower.model.js";
 import ListeningHistoryTrack from "../models/ListeningHistoryTracks.model.js";
 import ListeningHistoryEpisode from "../models/ListeningHistoryEpisodes.model.js";
 import PlaylistTrack from "../models/PlaylistTracks.model.js";
+import Follower from "../models/Followers.model.js";
 import db from "../config/database.js";
 
 
@@ -170,3 +171,17 @@ export const saveEpisodeHistory = async (req, res) => {
     }
 }
 
+
+export const getFollowedArtists = async (req, res) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json(new ApiError(401, "Unauthorized"));
+        }
+        const artists = await Follower.getFollowedArtists(userId);
+        return res.status(200).json(new ApiResponse(200, artists, "Followed artists fetched successfully"));
+    } catch (error) {
+        console.error("Error in getFollowedArtists:", error);
+        return res.status(500).json(new ApiError(500, "Internal server error", error));
+    }
+}
