@@ -32,7 +32,7 @@ const AddEpisodeDialog = () => {
         title: "",
         description: "",
         podcastId: "",
-        duration: "0",
+        duration: "",
     });
 
     const [audioFile, setAudioFile] = useState(null);
@@ -66,7 +66,7 @@ const AddEpisodeDialog = () => {
                 title: "",
                 description: "",
                 podcastId: "",
-                duration: "0",
+                duration: "",
             });
             setAudioFile(null);
             setOpen(false);
@@ -138,6 +138,17 @@ const AddEpisodeDialog = () => {
                             onChange={(e) => setNewEpisode({ ...newEpisode, title: e.target.value })}
                             className='bg-zinc-800 border-zinc-700'
                             placeholder='Episode Title'
+                        />
+                    </div>
+
+                    <div className='space-y-2'>
+                        <label className='text-sm font-medium'>Duration (seconds)</label>
+                        <Input
+                            type="number"
+                            value={newEpisode.duration}
+                            onChange={(e) => setNewEpisode({ ...newEpisode, duration: e.target.value })}
+                            className='bg-zinc-800 border-zinc-700'
+                            placeholder='Duration in seconds'
                         />
                     </div>
 

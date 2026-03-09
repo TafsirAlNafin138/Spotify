@@ -65,7 +65,7 @@ class Artist {
     const result = await db.query(
       `SELECT a.*, aa.is_primary
        FROM albums a
-       INNER JOIN album_author aa ON a.id = aa.album_id
+       INNER JOIN album_authors aa ON a.id = aa.album_id
        WHERE aa.artist_id = $1
        ORDER BY a.created_at DESC`,
       [artistId]
@@ -120,7 +120,7 @@ class Artist {
   static async getStats(artistId) {
     const result = await db.query(
       `SELECT 
-        (SELECT COUNT(*) FROM album_author WHERE artist_id = $1) as album_count,
+        (SELECT COUNT(*) FROM album_authors WHERE artist_id = $1) as album_count,
         (SELECT COUNT(*) FROM track_artists WHERE artist_id = $1) as track_count,
         (SELECT COUNT(*) FROM followers WHERE artist_id = $1) as followers_count,
         (SELECT COALESCE(SUM(t.play_count), 0) FROM tracks t 
@@ -135,6 +135,32 @@ class Artist {
   static async count() {
     const result = await db.query('SELECT COUNT(*) as count FROM artists');
     return parseInt(result.rows[0].count);
+  }
+
+  // Get trending artists based on followers
+  static async getTrending(limit = 10) {
+    const result = await db.query(
+      `SELECT a.*, COUNT(f.user_id) as follower_count
+       FROM artists a
+       LEFT JOIN followers f ON a.id = f.artist_id
+       GROUP BY a.id
+       ORDER BY follower_count DESC, a.created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+    return result.rows;
+  }
+
+  // Search artists by name or bio
+  static async search(query, limit = 20) {
+    const result = await db.query(
+      `SELECT * FROM artists
+       WHERE name ILIKE $1 OR bio ILIKE $1
+       ORDER BY name ASC
+       LIMIT $2`,
+      [`%${query}%`, limit]
+    );
+    return result.rows;
   }
 }
 

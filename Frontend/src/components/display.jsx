@@ -2,6 +2,10 @@ import React, { useEffect, useRef } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import DisplayHome from "./displayhome";
 import DisplayAlbum from "./DisplayAlbum";
+import DisplayArtist from "./DisplayArtist";
+import DisplaySearch from "./DisplaySearch";
+import DisplayHistory from "./DisplayHistory";
+import DisplayPodcast from "./DisplayPodcast";
 import LikedSongs from "./LikedSongs";
 
 import AdminPage from "../admin/AdminPage";
@@ -21,7 +25,11 @@ const Display = () => {
         <div ref={displayRef} className="w-full h-full m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto">
             <Routes>
                 <Route path="/" element={<DisplayHome />} />
+                <Route path="/search" element={<DisplaySearch />} />
+                <Route path="/history" element={<DisplayHistory />} />
                 <Route path="/album/:id" element={<DisplayAlbum />} />
+                <Route path="/podcast/:id" element={<DisplayPodcast />} />
+                <Route path="/artist/:id" element={<DisplayArtist />} />
                 <Route path="/liked-songs" element={<LikedSongs />} />
                 <Route path="/admin" element={<AdminPage />} />
             </Routes>

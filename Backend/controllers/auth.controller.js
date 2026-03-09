@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { uploadOnCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
 import db from '../config/database.js';
+import { url } from 'inspector';
 
 const generateTokens = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET || 'secret123', {
@@ -35,7 +36,7 @@ export const register = async (req, res) => {
             localFilePath = req.files.image.tempFilePath;
             const uploadResult = await uploadOnCloudinary(localFilePath);
             if (uploadResult) {
-                imageUrl = uploadResult.secure_url;
+                imageUrl = uploadResult?.url || null;
             }
         }
 
@@ -158,6 +159,7 @@ export const refreshToken = async (req, res) => {
         }
 
         // Generate new tokens
+        // const token = generateTokens(userId);
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(userId);
 
         const client = await db.connect();

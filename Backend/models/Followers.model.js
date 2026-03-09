@@ -2,8 +2,8 @@ import db from '../config/database.js';
 
 class Follower {
     // Follow an artist
-    static async followArtist(userId, artistId) {
-        const result = await db.query(
+    static async followArtist(userId, artistId, client = db) {
+        const result = await client.query(
             `INSERT INTO followers (user_id, artist_id) 
        VALUES ($1, $2) 
        ON CONFLICT (user_id, artist_id) DO NOTHING
@@ -14,8 +14,8 @@ class Follower {
     }
 
     // Unfollow an artist
-    static async unfollowArtist(userId, artistId) {
-        const result = await db.query(
+    static async unfollowArtist(userId, artistId, client = db) {
+        const result = await client.query(
             'DELETE FROM followers WHERE user_id = $1 AND artist_id = $2 RETURNING *',
             [userId, artistId]
         );

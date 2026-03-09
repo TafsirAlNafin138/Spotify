@@ -14,7 +14,10 @@ const Sidebar = () => {
                     <img className='w-6 h-6 transition-transform group-hover:scale-105 filter group-hover:brightness-125' src={assets.home_icon} alt="" />
                     <p className='font-bold text-sm tracking-wide'>Home</p>
                 </div>
-                <div className='flex items-center gap-4 px-4 py-3 cursor-pointer rounded-md transition-all duration-300 hover:text-white text-zinc-400 group'>
+                <div
+                    onClick={() => navigate('/search')}
+                    className='flex items-center gap-4 px-4 py-3 cursor-pointer rounded-md transition-all duration-300 hover:text-white text-zinc-400 group'
+                >
                     <img className='w-6 h-6 transition-transform group-hover:scale-105 filter group-hover:brightness-125' src={assets.search_icon} alt="" />
                     <p className='font-bold text-sm tracking-wide'>Search</p>
                 </div>

@@ -2,8 +2,8 @@ import db from '../config/database.js';
 
 class ListeningHistoryTrack {
     // Create or update listening history for a track
-    static async upsert({ user_id, track_id, progress_seconds, is_completed }) {
-        const result = await db.query(
+    static async upsert({ user_id, track_id, progress_seconds, is_completed }, client = db) {
+        const result = await client.query(
             `INSERT INTO listening_history_tracks (user_id, track_id, progress_seconds, is_completed, last_played_at) 
        VALUES ($1, $2, $3, $4, NOW()) 
        ON CONFLICT (user_id, track_id) DO UPDATE 

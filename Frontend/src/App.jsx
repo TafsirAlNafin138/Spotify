@@ -13,10 +13,10 @@ import Register from "./pages/Register.jsx";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  
+
   return children;
 };
 
@@ -77,7 +77,8 @@ const MainApp = () => {
     };
   }, [isDragging, handleMouseMove]);
 
-  const isAdminRoute = useLocation().pathname.startsWith("/admin");
+  const location = useLocation();
+  const isPlayerHiddenRoute = location.pathname.startsWith("/admin") || location.pathname === "/history";
 
   return (
     <div className="h-screen bg-neutral-900 flex flex-col">
@@ -93,7 +94,7 @@ const MainApp = () => {
           <Display />
         </div>
       </div>
-      {!isAdminRoute && <Player />}
+      {!isPlayerHiddenRoute && <Player />}
       <audio ref={audioRef} src={track?.file} preload="auto"></audio>
     </div>
   );
@@ -105,7 +106,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="h-screen bg-neutral-900 flex items-center justify-center">
-         <div className="w-16 h-16 border-t-4 border-b-4 border-green-500 rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-t-4 border-b-4 border-green-500 rounded-full animate-spin"></div>
       </div>
     );
   }

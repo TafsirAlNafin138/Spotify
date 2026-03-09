@@ -10,6 +10,7 @@ const PlayerContextProvider = (props) => {
 
     const [songsData, setSongsData] = useState([]);
     const [songsLoading, setSongsLoading] = useState(true);
+    const lastHistoryUpdate = useRef(0);
     const [track, setTrack] = useState({
         id: null,
         name: "",
@@ -36,6 +37,7 @@ const PlayerContextProvider = (props) => {
     const [isQueueOpen, setIsQueueOpen] = useState(false);
     const [activePlaylist, setActivePlaylist] = useState(null); // { tracks: [], name: '' }
     const [activeAlbum, setActiveAlbum] = useState(null); // { tracks: [], name: '' }
+    const [activeEpisodeList, setActiveEpisodeList] = useState(null); // { episodes: [], podcastImage: '' }
     const [autoAdvance, setAutoAdvance] = useState(false); // only auto-advance when Play All is used
     const [likedSongs, setLikedSongs] = useState({});
     const [songLikes, setSongLikes] = useState({});
@@ -105,7 +107,18 @@ const PlayerContextProvider = (props) => {
         duration: formatDuration(t.duration)
     });
 
-    const playWithId = async (id, options = { preserveAutoAdvance: false }) => {
+    // Helper to normalize a backend episode object into the shape the player expects
+    const normalizeEpisode = (e, podcastImage = "") => ({
+        id: e.id,
+        name: e.title || e.name,
+        image: e.cover_image || e.image || podcastImage,
+        file: e.audio_path,
+        desc: e.description || "",
+        duration: formatDuration(e.duration),
+        _isEpisode: true // flag so history saving uses the right endpoint
+    });
+
+    const playWithId = async (id, options = { preserveAutoAdvance: false, startTime: 0 }) => {
         // Single-track play: don't auto-advance when song ends, unless told to preserve it
         if (!options.preserveAutoAdvance) {
             setAutoAdvance(false);
@@ -138,13 +151,15 @@ const PlayerContextProvider = (props) => {
         axiosInstance.post(`/tracks/${id}/play`).catch(err =>
             console.error('Failed to increment play count:', err)
         );
-
         // Wait for audio to be ready, then play
         if (audioRef.current) {
             // The src will be updated by the useEffect in App.jsx that watches track.file
             // We need a small delay for the src to update
             setTimeout(async () => {
                 try {
+                    if (options.startTime) {
+                        audioRef.current.currentTime = options.startTime;
+                    }
                     await audioRef.current.play();
                     setPlayerState(true);
                 } catch (err) {
@@ -153,15 +168,31 @@ const PlayerContextProvider = (props) => {
             }, 100);
         }
 
+        const startSec = options.startTime || 0;
         setTrackProgress({
-            currentTime: { seconds: 0, minutes: 0 },
+            currentTime: { seconds: Math.floor(startSec % 60), minutes: Math.floor(startSec / 60) },
             duration: { seconds: 0, minutes: 0 }
         });
-        if (seekBar.current) seekBar.current.style.width = `0%`;
-        if (seekBg.current) seekBg.current.style.width = `0%`;
+
+        // Save track to listening history
+        lastHistoryUpdate.current = startSec;
+        try {
+            await axiosInstance.post('/users/history/tracks', { trackId: id, progressSeconds: Math.floor(startSec), isCompleted: false });
+        } catch (err) {
+            console.error('Failed to save track history:', err);
+        }
     }
 
     const prevTrack = () => {
+        // Episode list takes priority
+        if (activeEpisodeList?.episodes?.length > 0) {
+            const epList = activeEpisodeList.episodes;
+            const currentIndex = epList.findIndex(e => e.id === track.id);
+            let prevIndex = currentIndex - 1;
+            if (prevIndex < 0) prevIndex = epList.length - 1;
+            playEpisodeWithId(epList[prevIndex].id, epList, activeEpisodeList.podcastImage, { preserveAutoAdvance: true });
+            return;
+        }
         // Use activePlaylist (e.g. album tracks) if available, otherwise fall back to global songsData
         const playlist = activePlaylist?.tracks?.length > 0 ? activePlaylist.tracks : activeAlbum?.tracks?.length > 0 ? activeAlbum.tracks : songsData;
         if (playlist.length === 0) return;
@@ -172,6 +203,23 @@ const PlayerContextProvider = (props) => {
     }
 
     const nextTrack = (isAutoAdvance = false) => {
+        // Episode list takes priority
+        if (activeEpisodeList?.episodes?.length > 0) {
+            const epList = activeEpisodeList.episodes;
+            const currentIndex = epList.findIndex(e => e.id === track.id);
+            let nextIndex = currentIndex + 1;
+            if (nextIndex >= epList.length) {
+                if (isAutoAdvance) {
+                    setAutoAdvance(false);
+                    autoAdvanceRef.current = false;
+                    setPlayerState(false);
+                    return;
+                }
+                nextIndex = 0;
+            }
+            playEpisodeWithId(epList[nextIndex].id, epList, activeEpisodeList.podcastImage, { preserveAutoAdvance: true });
+            return;
+        }
         // Use activePlaylist (e.g. album tracks) if available, otherwise fall back to global songsData
         const playlist = activePlaylist?.tracks?.length > 0 ? activePlaylist.tracks : activeAlbum?.tracks?.length > 0 ? activeAlbum.tracks : songsData;
         if (playlist.length === 0) return;
@@ -193,6 +241,61 @@ const PlayerContextProvider = (props) => {
 
         playWithId(playlist[nextIndex].id, { preserveAutoAdvance: true });
     }
+
+    // Play an episode by ID, with an optional episode list for auto-advance
+    const playEpisodeWithId = async (id, episodeList = [], podcastImage = "", options = { preserveAutoAdvance: false }) => {
+        if (!options.preserveAutoAdvance) {
+            setAutoAdvance(false);
+            autoAdvanceRef.current = false;
+        }
+
+        // Find episode in provided list first
+        let episodeData = episodeList.find(e => e.id === id);
+        if (!episodeData) {
+            try {
+                const response = await axiosInstance.get(`/podcasts`);
+                // Fallback: episode data not found, just play the id from list if available
+            } catch (err) {
+                console.error('Error fetching episode:', err);
+                return;
+            }
+        }
+
+        if (episodeData) {
+            setTrack(normalizeEpisode(episodeData, podcastImage));
+        }
+
+        // Store the active episode list for prev/next
+        if (episodeList.length > 0) {
+            setActiveEpisodeList({ episodes: episodeList, podcastImage });
+            setActiveAlbum(null);
+            setActivePlaylist(null);
+        }
+
+        if (audioRef.current) {
+            setTimeout(async () => {
+                try {
+                    await audioRef.current.play();
+                    setPlayerState(true);
+                } catch (err) {
+                    console.error('Play failed:', err);
+                }
+            }, 100);
+        }
+
+        setTrackProgress({
+            currentTime: { seconds: 0, minutes: 0 },
+            duration: { seconds: 0, minutes: 0 }
+        });
+
+        // Save episode to listening history
+        lastHistoryUpdate.current = 0;
+        try {
+            await axiosInstance.post('/users/history/episodes', { episodeId: id, progressSeconds: 0, isCompleted: false });
+        } catch (err) {
+            console.error('Failed to save episode history:', err);
+        }
+    };
 
     // Keep refs in sync so onended always reads the latest values
     useEffect(() => {
@@ -275,6 +378,27 @@ const PlayerContextProvider = (props) => {
                         // Update seek bar
                         if (seekBar.current && seekBg.current) {
                             seekBar.current.style.width = `${(currentTime / duration) * 100}%`;
+                        }
+
+                        // Background history progress update every 10 seconds
+                        if (isSignedIn && currentTime - lastHistoryUpdate.current >= 10) {
+                            lastHistoryUpdate.current = currentTime;
+                            const isCompleted = (currentTime / duration) > 0.9;
+                            if (track && track.id) {
+                                if (track._isEpisode) {
+                                    axiosInstance.post('/users/history/episodes', {
+                                        episodeId: track.id,
+                                        progressSeconds: Math.floor(currentTime),
+                                        isCompleted
+                                    }).catch(() => { });
+                                } else {
+                                    axiosInstance.post('/users/history/tracks', {
+                                        trackId: track.id,
+                                        progressSeconds: Math.floor(currentTime),
+                                        isCompleted
+                                    }).catch(() => { });
+                                }
+                            }
                         }
                     }
                 };
@@ -438,10 +562,13 @@ const PlayerContextProvider = (props) => {
         getFollowerCount,
         activePlaylist,
         activeAlbum,
+        activeEpisodeList,
         setActivePlaylist,
         setActiveAlbum,
+        setActiveEpisodeList,
         autoAdvance,
-        setAutoAdvance
+        setAutoAdvance,
+        playEpisodeWithId
     };
 
     return (

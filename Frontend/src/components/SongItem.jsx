@@ -2,8 +2,9 @@ import React from "react";
 import { PlayerContext } from "../contexts/PlayerContext.jsx";
 
 const SongItem = ({ image, name, desc, id }) => {
-    const { playWithId, setActiveAlbum, setActivePlaylist, toggleLike, isLiked } = React.useContext(PlayerContext);
+    const { playWithId, setActiveAlbum, setActivePlaylist, toggleLike, isLiked, track, playerState } = React.useContext(PlayerContext);
     const liked = isLiked(id);
+    const isPlaying = track?.id === id && playerState;
 
     return (
         <div className="min-w-[180px] max-w-[180px] w-[180px] flex-shrink-0 h-auto p-2 px-3 rounded cursor-pointer hover:bg-[#ffffff26] transition group relative">
@@ -15,11 +16,17 @@ const SongItem = ({ image, name, desc, id }) => {
                 <div className="relative">
                     <img className="rounded mb-4 w-full aspect-square object-cover" src={image} alt="" />
                     {/* Play button overlay on hover */}
-                    <div className="absolute bottom-6 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className={`absolute bottom-6 right-2 transition-opacity ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         <div className="bg-green-500 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
-                            <svg className="w-5 h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
+                            {isPlaying ? (
+                                <svg className="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            )}
                         </div>
                     </div>
                 </div>
