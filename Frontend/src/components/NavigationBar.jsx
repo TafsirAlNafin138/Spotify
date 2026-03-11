@@ -43,6 +43,16 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
                         </button>
                     )}
 
+                    {/*Statistics button */}
+                    {user && (
+                        <button
+                            onClick={() => navigate('/statistics')}
+                            className="bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white px-4 py-1 rounded-2xl text-sm font-semibold transition"
+                        >
+                            Statistics
+                        </button>
+                    )}
+
                     <div>
                         {isAdmin && (
                             <button onClick={() => navigate('/admin')} className="bg-white text-black px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-200 transition">
