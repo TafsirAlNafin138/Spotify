@@ -19,7 +19,7 @@ class ListeningHistoryEpisode {
     // Get listening history for a user
     static async getByUser(userId, limit = 50, offset = 0) {
         const result = await db.query(
-            `SELECT lhe.*, e.title, e.duration, e.audio_path, p.title as podcast_title, p.cover_image
+            `SELECT lhe.*, e.title, e.duration, e.audio_path, p.title as podcast_title, p.cover_image, p.id as podcast_id
        FROM listening_history_episodes lhe
        INNER JOIN episodes e ON lhe.episode_id = e.id
        INNER JOIN podcasts p ON e.podcast_id = p.id

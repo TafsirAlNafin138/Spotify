@@ -57,7 +57,7 @@ class Podcast {
         const result = await db.query(
             `SELECT * FROM episodes 
        WHERE podcast_id = $1 
-       ORDER BY release_date DESC
+       ORDER BY release_date ASC
        LIMIT $2 OFFSET $3`,
             [podcastId, limit, offset]
         );

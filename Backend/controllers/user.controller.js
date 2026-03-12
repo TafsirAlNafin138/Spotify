@@ -70,6 +70,7 @@ export const getEpisodesLintenHistory = async (req, res) => {
         }
 
         const episodes = await ListeningHistoryEpisode.getByUser(user.id);
+        // console.log("Fetched episodes linten history:", episodes);
         return res.status(200).json(new ApiResponse(200, episodes, "Episodes Linten History fetched successfully"));
     } catch (error) {
         console.error("Error fetching episodes linten history:", error);
