@@ -38,8 +38,7 @@ class Track {
            path = COALESCE($4, path),
            image = COALESCE($5, image),
            track_number = COALESCE($6, track_number),
-           is_explicit = COALESCE($7, is_explicit),
-           updated_at = NOW()
+           is_explicit = COALESCE($7, is_explicit)
        WHERE id = $8 
        RETURNING *`,
       [album_id, name, duration, path, image, track_number, is_explicit, id]
@@ -124,17 +123,7 @@ class Track {
     return result.rows;
   }
 
-  // Increment play count
-  static async incrementPlayCount(id) {
-    const result = await db.query(
-      `UPDATE tracks 
-       SET play_count = play_count + 1 
-       WHERE id = $1 
-       RETURNING *`,
-      [id]
-    );
-    return result.rows[0];
-  }
+
 
   // Check if track is liked by user
   static async isLikedBy(trackId, userId) {
@@ -198,80 +187,24 @@ class Track {
   }
 
   static async getMadeForYou(userId, limit = 50) {
-  const query = `
-  WITH UserTopGenres AS (
-    SELECT tg.genre_id 
-    FROM likes l
-    JOIN track_genres tg ON l.track_id = tg.track_id
-    WHERE l.user_id = $1
-    GROUP BY tg.genre_id
-    ORDER BY COUNT(*) DESC
-    LIMIT 3
-  ),
-  UserFollowedArtists AS (
-    SELECT artist_id FROM followers WHERE user_id = $1
-  ),
-  UserListeningGenres AS (
-    SELECT DISTINCT tg.genre_id
-    FROM listening_history_tracks lht
-    JOIN track_genres tg ON lht.track_id = tg.track_id
-    WHERE lht.user_id = $1
-  )
-  SELECT DISTINCT ON (t.id)
-    t.*,
-    (
-      CASE 
-        WHEN EXISTS (
-          SELECT 1 FROM track_artists ta 
-          WHERE ta.track_id = t.id 
-          AND ta.artist_id IN (SELECT artist_id FROM UserFollowedArtists)
-        ) THEN 10 ELSE 0 END
-      +
-      CASE 
-        WHEN EXISTS (
-          SELECT 1 FROM track_genres tg 
-          WHERE tg.track_id = t.id 
-          AND tg.genre_id IN (SELECT genre_id FROM UserTopGenres)
-        ) THEN 5 ELSE 0 END
-      +
-      CASE
-        WHEN EXISTS (
-          SELECT 1 FROM track_genres tg
-          WHERE tg.track_id = t.id
-          AND tg.genre_id IN (SELECT genre_id FROM UserListeningGenres)
-        ) THEN 20 ELSE 0 END
-      +
-      (LOG(t.play_count + 1) * 2)
-    ) as relevance_score
-  FROM tracks t
-  LEFT JOIN listening_history_tracks lht ON t.id = lht.track_id AND lht.user_id = $1
-  LEFT JOIN track_genres tg ON t.id = tg.track_id
-  LEFT JOIN genres g ON tg.genre_id = g.id
-  WHERE t.id NOT IN (
-    SELECT track_id FROM listening_history_tracks 
-    WHERE user_id = $1 AND is_completed = true
-  )
-  ORDER BY t.id, relevance_score DESC, t.created_at DESC
-  LIMIT $2;
-`;
-  try {
-    const result = await db.query(query, [userId, limit]);
-    if (result.rows.length === 0) {
-      const fallback = await db.query(
-        `SELECT * FROM tracks 
-         ORDER BY created_at DESC, play_count DESC 
-         LIMIT $1`,
-        [limit]
-      );
-      return fallback.rows;
+    try {
+      const result = await db.query('SELECT * FROM get_made_for_you($1, $2)', [userId, limit]);
+      if (result.rows.length === 0) {
+        const fallback = await db.query(
+          `SELECT * FROM tracks 
+           ORDER BY created_at DESC, play_count DESC 
+           LIMIT $1`,
+          [limit]
+        );
+        return fallback.rows;
+      }
+      return result.rows;
+    } catch (error) {
+      console.error("Error in getMadeForYou:", error);
+      const emergencyFallback = await db.query('SELECT * FROM tracks LIMIT $1', [limit]);
+      return emergencyFallback.rows;
     }
-    return result.rows;
-  } catch (error) {
-    console.error("Error in getMadeForYou:", error);
-    const emergencyFallback = await db.query('SELECT * FROM tracks LIMIT $1', [limit]);
-    return emergencyFallback.rows;
   }
-}
   static async getNewReleases(limit = 50) {
     const result = await db.query(
       'SELECT * FROM tracks ORDER BY created_at DESC LIMIT $1',

@@ -3,18 +3,26 @@ import db from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
 class User {
-  // new user with hashed password
-  static async createUser({ name, email, password, image }, client = db) {
+  // new user with hashed password using procedure
+  static async registerUser({ name, email, password, image }, client = db) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const result = await client.query(
-      `INSERT INTO users (name, email, password_hash, image) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, name, email, image, created_at`,
+      `CALL register_user($1, $2, $3, $4, null, null)`,
       [name, email, hashedPassword, image || null]
     );
-    return result.rows[0];
+
+    let out_user_id = result.rows[0]?.out_user_id || result.rows[0]?.id || result.rows[0]?.[result.fields?.find(f => f.name.includes("id"))?.name];
+    if (!out_user_id && result.rows.length > 0) {
+        out_user_id = Object.values(result.rows[0])[0];
+    }
+
+    const userResult = await client.query(
+      'SELECT id, name, email, image, created_at FROM users WHERE id = $1',
+      [out_user_id]
+    );
+    return userResult.rows[0];
   }
 
   // Verify user password

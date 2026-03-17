@@ -11,21 +11,17 @@ import db from "../config/database.js";
 
 export const getStats = async (req, res) => {
     try {
-        const tracks = await Track.count();
-        const albums = await Album.count();
-        const artists = await Artist.count();
-        const genres = await Genre.count();
-        const podcasts = await Podcast.count();
-        const episodes = await Episode.count();
-        const users = await User.count();
+        const result = await db.query('SELECT * FROM get_admin_stats()');
+        const stats = result.rows[0];
+        
         return res.status(200).json(new ApiResponse(200, {
-            tracks,
-            albums,
-            artists,
-            genres,
-            podcasts,
-            episodes,
-            users
+            tracks: parseInt(stats.total_songs),
+            albums: parseInt(stats.total_albums),
+            artists: parseInt(stats.total_artists),
+            genres: parseInt(stats.total_genres),
+            podcasts: parseInt(stats.total_podcasts),
+            episodes: parseInt(stats.total_episodes),
+            users: parseInt(stats.total_users)
         }, "Stats"));
     } catch (error) {
         console.error("Error in getStats:", error);

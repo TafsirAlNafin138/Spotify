@@ -80,15 +80,3 @@ export const getNewReleases = async (req, res) => {
     }
 }
 
-export const incrementPlayCount = async (req, res) => {
-    try {
-        const track = await Track.incrementPlayCount(req.params.id);
-        if (!track) {
-            return res.status(404).json(new ApiError(404, "Track not found"));
-        }
-        return res.status(200).json(new ApiResponse(200, track, "Play count updated"));
-    } catch (error) {
-        console.error("Error in incrementPlayCount:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}

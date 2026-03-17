@@ -71,33 +71,12 @@ export const toggleFollowArtist = async (req, res) => {
             return res.status(404).json(new ApiError(404, "Artist not found"));
         }
 
-        const isFollowing = await Follower.isFollowing(userId, artistId);
-
-        let message = "";
-        let currentlyFollowing = false;
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-
-            if (isFollowing) {
-                await Follower.unfollowArtist(userId, artistId, client);
-                message = "Unfollowed artist successfully";
-                currentlyFollowing = false;
-            } else {
-                await Follower.followArtist(userId, artistId, client);
-                message = "Followed artist successfully";
-                currentlyFollowing = true;
-            }
-
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, { isFollowing: currentlyFollowing }, message));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            console.error("Error in toggleFollowArtist:", error);
-            return res.status(500).json(new ApiError(500, "Internal server error", error));
-        } finally {
-            client.release();
+        const following = await Follower.toggleFollow(userId, artistId);
+        
+        if (following) {
+            return res.status(200).json(new ApiResponse(200, { isFollowing: true }, "Followed artist successfully"));
+        } else {
+            return res.status(200).json(new ApiResponse(200, { isFollowing: false }, "Unfollowed artist successfully"));
         }
     } catch (error) {
         console.error("Error in toggleFollowArtist:", error);

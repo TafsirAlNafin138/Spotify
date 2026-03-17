@@ -78,27 +78,6 @@ export const getEpisodesLintenHistory = async (req, res) => {
     }
 }
 
-export const getUserPlaylists = async (req, res) => {
-    try {
-        const userId = req.userId;
-
-        if (!userId) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return res.status(404).json(new ApiError(404, "User not found"));
-        }
-
-        const playlists = await PlaylistTrack.getByUser(user.id);
-        return res.status(200).json(new ApiResponse(200, playlists, "User Playlists fetched successfully"));
-    } catch (error) {
-        console.error("Error fetching user playlists:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error"));
-    }
-}
 
 export const saveTrackHistory = async (req, res) => {
     const client = await db.connect();

@@ -20,6 +20,7 @@ import podcastRoutes from './routes/podcast.route.js';
 import podcastFollowerRoutes from './routes/podcastFollower.route.js';
 import artistRoutes from './routes/artist.route.js';
 import searchRoutes from './routes/search.route.js';
+import playlistRoutes from './routes/playlist.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,6 +62,7 @@ app.use('/api/podcasts', podcastRoutes);
 app.use('/api/podcast-followers', podcastFollowerRoutes);
 app.use('/api/artists', artistRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/playlists', playlistRoutes);
 
 app.get("/", (req, res) => {
   res.send("Spotify API is running");

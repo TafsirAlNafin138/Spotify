@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllTracks, getTrackById, incrementPlayCount, disableCache, getMadeForYou, getNewReleases, getTrandingSongs } from "../controllers/Tracks.controller.js";
+import { getAllTracks, getTrackById, disableCache, getMadeForYou, getNewReleases, getTrandingSongs } from "../controllers/Tracks.controller.js";
 import { protectRoute, requireAdmin } from "../middleware/auth.middleware.js";
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get("/", protectRoute, requireAdmin, getAllTracks);
 router.get("/trending", protectRoute, getTrandingSongs);
 router.get("/made-for-you", protectRoute, getMadeForYou);
 router.get("/new-releases", protectRoute, getNewReleases);
-router.post("/:id/play", protectRoute, incrementPlayCount);
+
 router.get("/:id", protectRoute, getTrackById);
 
 export default router;

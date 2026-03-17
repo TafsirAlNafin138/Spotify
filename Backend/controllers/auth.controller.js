@@ -45,7 +45,7 @@ export const register = async (req, res) => {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
-            user = await User.createUser({ name, email, password, image: imageUrl }, client);
+            user = await User.registerUser({ name, email, password, image: imageUrl }, client);
             tokens = generateTokens(user.id);
             // Save hashed refresh token to database
             await User.saveRefreshToken(user.id, tokens.refreshToken, client);

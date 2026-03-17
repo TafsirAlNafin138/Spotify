@@ -42,8 +42,7 @@ class Album {
     const result = await client.query(
       `UPDATE albums 
        SET name = COALESCE($1, name), 
-           image = COALESCE($2, image),
-           updated_at = NOW()
+           image = COALESCE($2, image)
        WHERE id = $3 
        RETURNING *`,
       [name, image, id]

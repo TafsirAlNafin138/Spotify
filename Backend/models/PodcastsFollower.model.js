@@ -1,25 +1,13 @@
 import db from '../config/database.js';
 
 class PodcastFollower {
-    // Follow a podcast
-    static async followPodcast(userId, podcastId, client = db) {
+    // Toggle podcast follow
+    static async toggleFollow(userId, podcastId, client = db) {
         const result = await client.query(
-            `INSERT INTO podcast_followers (user_id, podcast_id) 
-       VALUES ($1, $2) 
-       ON CONFLICT (user_id, podcast_id) DO NOTHING
-       RETURNING *`,
+            'SELECT toggle_podcast_follow($1, $2) as following',
             [userId, podcastId]
         );
-        return result.rows[0];
-    }
-
-    // Unfollow a podcast
-    static async unfollowPodcast(userId, podcastId, client = db) {
-        const result = await client.query(
-            'DELETE FROM podcast_followers WHERE user_id = $1 AND podcast_id = $2 RETURNING *',
-            [userId, podcastId]
-        );
-        return result.rows[0];
+        return result.rows[0].following;
     }
 
     // Check if user follows podcast

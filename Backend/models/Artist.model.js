@@ -6,7 +6,7 @@ class Artist {
       `INSERT INTO artists (name, bio, image) 
        VALUES ($1, $2, $3) 
        RETURNING *`,
-      [name.charAt(0).toUpperCase() + name.slice(1), bio, image]
+      [name, bio, image]
     );
     return result.rows[0];
   }
@@ -24,7 +24,7 @@ class Artist {
   static async findByName(name) {
     const result = await db.query(
       'SELECT * FROM artists WHERE name = $1',
-      [name.charAt(0).toUpperCase() + name.slice(1)]
+      [name]
     );
     return result.rows[0];
   }
@@ -43,11 +43,10 @@ class Artist {
       `UPDATE artists 
        SET name = COALESCE($1, name), 
            bio = COALESCE($2, bio), 
-           image = COALESCE($3, image),
-           updated_at = NOW()
+           image = COALESCE($3, image)
        WHERE id = $4 
        RETURNING *`,
-      [name.charAt(0).toUpperCase() + name.slice(1), bio, image, id]
+      [name, bio, image, id]
     );
     return result.rows[0];
   }
@@ -111,7 +110,7 @@ class Artist {
        WHERE name ILIKE $1 
        ORDER BY name ASC 
        LIMIT $2`,
-      [`%${query.charAt(0).toUpperCase() + query.slice(1)}%`, limit]
+      [`%${query}%`, limit]
     );
     return result.rows;
   }
@@ -119,13 +118,7 @@ class Artist {
   // Get artist stats
   static async getStats(artistId) {
     const result = await db.query(
-      `SELECT 
-        (SELECT COUNT(*) FROM album_authors WHERE artist_id = $1) as album_count,
-        (SELECT COUNT(*) FROM track_artists WHERE artist_id = $1) as track_count,
-        (SELECT COUNT(*) FROM followers WHERE artist_id = $1) as followers_count,
-        (SELECT COALESCE(SUM(t.play_count), 0) FROM tracks t 
-         INNER JOIN track_artists ta ON t.id = ta.track_id 
-         WHERE ta.artist_id = $1) as total_plays`,
+      'SELECT * FROM get_artist_stats($1)',
       [artistId]
     );
     return result.rows[0];

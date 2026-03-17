@@ -2,12 +2,12 @@ import db from '../config/database.js';
 
 class Playlist {
   // Create a new playlist
-  static async create({ user_id, name, image }) {
-    const result = await db.query(
-      `INSERT INTO playlists (user_id, name, image) 
-       VALUES ($1, $2, $3) 
+  static async create({ user_id, name }, client = db) {
+    const result = await client.query(
+      `INSERT INTO playlists (user_id, name) 
+       VALUES ($1, $2) 
        RETURNING *`,
-      [user_id, name, image]
+      [user_id, name]
     );
     return result.rows[0];
   }
@@ -24,7 +24,9 @@ class Playlist {
   // Get all playlists for a user
   static async findByUserId(userId, limit = 50, offset = 0) {
     const result = await db.query(
-      `SELECT p.*, COUNT(pt.track_id) as track_count
+      `SELECT p.*, 
+              COUNT(pt.track_id) as track_count,
+              COALESCE(ARRAY_AGG(pt.track_id) FILTER (WHERE pt.track_id IS NOT NULL), '{}') as track_ids
        FROM playlists p
        LEFT JOIN playlist_tracks pt ON p.id = pt.playlist_id
        WHERE p.user_id = $1
@@ -37,22 +39,20 @@ class Playlist {
   }
 
   // Update playlist
-  static async update(id, { name, image }) {
-    const result = await db.query(
+  static async update(id, { name }, client = db) {
+    const result = await client.query(
       `UPDATE playlists 
-       SET name = COALESCE($1, name), 
-           image = COALESCE($2, image),
-           updated_at = NOW()
-       WHERE id = $3 
+       SET name = COALESCE($1, name)
+       WHERE id = $2 
        RETURNING *`,
-      [name, image, id]
+      [name, id]
     );
     return result.rows[0];
   }
 
   // Delete playlist
-  static async delete(id) {
-    const result = await db.query(
+  static async delete(id, client = db) {
+    const result = await client.query(
       'DELETE FROM playlists WHERE id = $1 RETURNING *',
       [id]
     );
@@ -60,17 +60,11 @@ class Playlist {
   }
 
   // Add track to playlist
-  static async addTrack(playlistId, trackId, trackOrder = null) {
-    // If no track order specified, get the next order number
-    if (trackOrder === null) {
-      const orderResult = await db.query(
-        'SELECT COALESCE(MAX(track_order), 0) + 1 as next_order FROM playlist_tracks WHERE playlist_id = $1',
-        [playlistId]
-      );
-      trackOrder = orderResult.rows[0].next_order;
-    }
+  static async addTrack(playlistId, trackId, trackOrder = null, client = db) {
+    // The DB trigger trg_auto_playlist_track_order will automatically
+    // assign track_order = MAX(track_order) + 1 if it is null/omitted.
 
-    const result = await db.query(
+    const result = await client.query(
       `INSERT INTO playlist_tracks (playlist_id, track_id, track_order) 
        VALUES ($1, $2, $3) 
        ON CONFLICT (playlist_id, track_id) DO UPDATE 
@@ -82,8 +76,8 @@ class Playlist {
   }
 
   // Remove track from playlist
-  static async removeTrack(playlistId, trackId) {
-    const result = await db.query(
+  static async removeTrack(playlistId, trackId, client = db) {
+    const result = await client.query(
       'DELETE FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2 RETURNING *',
       [playlistId, trackId]
     );
@@ -93,7 +87,14 @@ class Playlist {
   // Get all tracks in a playlist
   static async getTracks(playlistId) {
     const result = await db.query(
-      `SELECT t.*, pt.track_order, pt.added_at
+      `SELECT t.*, pt.track_order, pt.added_at,
+         COALESCE(
+           (SELECT json_agg(json_build_object('id', a.id, 'name', a.name))
+            FROM track_artists ta
+            JOIN artists a ON ta.artist_id = a.id
+            WHERE ta.track_id = t.id),
+           '[]'::json
+         ) as artists
        FROM tracks t
        INNER JOIN playlist_tracks pt ON t.id = pt.track_id
        WHERE pt.playlist_id = $1

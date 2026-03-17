@@ -1,25 +1,13 @@
 import db from '../config/database.js';
 
 class Like {
-    // Like a track
-    static async likeTrack(userId, trackId, client = db) {
+    // Toggle like for a track
+    static async toggleLike(userId, trackId, client = db) {
         const result = await client.query(
-            `INSERT INTO likes (user_id, track_id) 
-       VALUES ($1, $2) 
-       ON CONFLICT (user_id, track_id) DO NOTHING
-       RETURNING *`,
+            'SELECT toggle_track_like($1, $2) as liked',
             [userId, trackId]
         );
-        return result.rows[0];
-    }
-
-    // Unlike a track
-    static async unlikeTrack(userId, trackId, client = db) {
-        const result = await client.query(
-            'DELETE FROM likes WHERE user_id = $1 AND track_id = $2 RETURNING *',
-            [userId, trackId]
-        );
-        return result.rows[0];
+        return result.rows[0].liked;
     }
 
     // Check if user liked a track

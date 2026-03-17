@@ -4,11 +4,9 @@ import ApiResponse from "../utils/ApiResponse.js";
 import Track from "../models/Track.model.js";
 import Album from "../models/Album.model.js";
 import TrackArtist from "../models/TrackArtists.model.js";
-import TrackGenre from "../models/TrackGenres.model.js";
 import Artist from "../models/Artist.model.js";
 import Genre from "../models/Genres.model.js";
 import AlbumAuthor from "../models/AlbumAuthors.model.js";
-import AlbumGenre from "../models/AlbumGenres.model.js";
 import Podcast from "../models/Podcasts.model.js";
 import Episode from "../models/Episodes.model.js";
 import db from "../config/database.js";
@@ -126,22 +124,17 @@ import User from "../models/User.model.js";
 
 export const getAdminStats = async (req, res) => {
     try {
-        const totalSongs = await Track.count();
-        const totalAlbums = await Album.count();
-        const totalUsers = await User.count();
-        const totalArtists = await Artist.count();
-        const totalGenres = await Genre.count();
-        const totalPodcasts = await Podcast.count();
-        const totalEpisodes = await Episode.count();
+        const result = await db.query('SELECT * FROM get_admin_stats()');
+        const stats = result.rows[0];
 
         return res.status(200).json(new ApiResponse(200, {
-            totalSongs,
-            totalAlbums,
-            totalUsers,
-            totalArtists,
-            totalGenres,
-            totalPodcasts,
-            totalEpisodes
+            totalSongs: parseInt(stats.total_songs),
+            totalAlbums: parseInt(stats.total_albums),
+            totalUsers: parseInt(stats.total_users),
+            totalArtists: parseInt(stats.total_artists),
+            totalGenres: parseInt(stats.total_genres),
+            totalPodcasts: parseInt(stats.total_podcasts),
+            totalEpisodes: parseInt(stats.total_episodes)
         }, "Stats fetched successfully"));
     } catch (error) {
         console.error("Error in getAdminStats:", error);
@@ -186,63 +179,56 @@ export const createSong = async (req, res) => {
 
         const client = await db.connect();
         try {
-            await client.query('BEGIN');
-
-            const song = await Track.create({
-                album_id: albumId,
-                name: req.body.name,
-                duration: req.body.duration,
-                path: audioUrl?.url,
-                image: imageUrl?.url || null,
-                track_number: req.body.track_number || null,
-                is_explicit: req.body.is_explicit || false
-            }, client);
-
-
-            // Now handle artists
+            // Parse artists and genres
+            let artistData = null;
             if (req.body.artists) {
                 const artists = typeof req.body.artists === 'string' ? JSON.parse(req.body.artists) : req.body.artists;
-
-                // If artists is an array
                 if (Array.isArray(artists)) {
-                    for (const artist of artists) {
-                        if (!artist.id) {
-                            await client.query('ROLLBACK');
-                            return res.status(400).json(new ApiError(400, "Invalid artist ID"));
-                        }
-                        const artistId = await Artist.findById(artist.id);
-                        if (!artistId) {
-                            await client.query('ROLLBACK');
-                            return res.status(404).json(new ApiError(404, "Artist not found"));
-                        }
-                        await TrackArtist.create(song.id, artistId.id, artist.role || "Primary", client);
-                    }
+                    artistData = JSON.stringify(artists.map(a => ({ id: a.id, role: a.role || "Primary" })));
                 }
             }
 
-            // Now handle genres
+            let genreIds = null;
             if (req.body.genres) {
                 const genres = typeof req.body.genres === 'string' ? JSON.parse(req.body.genres) : req.body.genres;
                 if (Array.isArray(genres)) {
-                    for (const genre of genres) {
-                        if (!genre.id) {
-                            await client.query('ROLLBACK');
-                            return res.status(400).json(new ApiError(400, "Invalid genre ID"));
-                        }
-                        const genreId = await Genre.findById(genre.id);
-                        if (!genreId) {
-                            await client.query('ROLLBACK');
-                            return res.status(404).json(new ApiError(404, "Genre not found"));
-                        }
-                        await TrackGenre.create(song.id, genreId.id, client);
-                    }
+                    genreIds = genres.map(g => g.id);
                 }
             }
 
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, song, "Song created successfully"));
+            // Call the procedure
+            const result = await client.query(
+                `CALL create_track_with_relations($1, $2, $3, $4, $5, $6, $7, $8, $9, null)`,
+                [
+                    albumId,
+                    req.body.name,
+                    req.body.duration,
+                    audioUrl?.url,
+                    imageUrl?.url || null,
+                    req.body.track_number || null,
+                    req.body.is_explicit || false,
+                    artistData,
+                    genreIds
+                ]
+            );
+
+            // Fetch the newly created track
+            const out_track_id = result.rows[0]?.out_track_id || result.rows[0]?.id || result.rows[0]?.track_id || result.rows[0]?.[result.fields?.find(f => f.name.includes("id"))?.name];
+
+            // Note: Procedures returning INOUT params might return the variables directly
+            let songId = out_track_id;
+            if (!songId && result.rows.length > 0) {
+                songId = Object.values(result.rows[0])[0];
+            }
+
+            let song = null;
+            if (songId) {
+                song = await Track.findById(songId);
+            }
+
+            return res.status(200).json(new ApiResponse(200, song || { id: songId }, "Song created successfully"));
         } catch (error) {
-            await client.query('ROLLBACK');
+            console.error("Error executing create_track_with_relations:", error);
             throw error;
         } finally {
             client.release();
@@ -282,75 +268,7 @@ export const deleteSong = async (req, res) => {
     }
 }
 
-export const addGenreToSong = async (req, res) => {
-    try {
-        const songId = req.body.song.id;
-        const genreId = req.body.genre.id;
-        if (!songId || !genreId) {
-            return res.status(400).json(new ApiError(400, "Song ID and Genre ID are required"));
-        }
-        const findSong = await Track.findById(songId);
-        if (!findSong) {
-            return res.status(404).json(new ApiError(404, "Song not found"));
-        }
 
-        const findGenre = await Genre.findById(genreId);
-        if (!findGenre) {
-            return res.status(404).json(new ApiError(404, "Genre not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const song = await Track.addGenre(songId, genreId, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, song, "Genre added to song successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in addGenreToSong:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
-
-export const removeGenreFromSong = async (req, res) => {
-    try {
-        const songId = req.body.song.id;
-        const genreId = req.body.genre.id;
-        if (!songId || !genreId) {
-            return res.status(400).json(new ApiError(400, "Song ID and Genre ID are required"));
-        }
-        const findSong = await Track.findById(songId);
-        if (!findSong) {
-            return res.status(404).json(new ApiError(404, "Song not found"));
-        }
-
-        const findGenre = await Genre.findById(genreId);
-        if (!findGenre) {
-            return res.status(404).json(new ApiError(404, "Genre not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const song = await Track.removeGenre(songId, genreId, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, song, "Genre removed from song successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in removeGenreFromSong:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
 
 
 
@@ -407,36 +325,33 @@ export const createAlbum = async (req, res) => {
 
         const client = await db.connect();
         try {
-            await client.query('BEGIN');
+            const artistIds = parsedArtists.length > 0 ? parsedArtists.map(a => a.id) : null;
+            const genreIds = parsedGenres.length > 0 ? parsedGenres.map(g => g.id) : null;
 
-            // 2. Create Album first
-            const album = await Album.create({
-                name: req.body.name,
-                image: imageUrl?.url
-            }, client);
+            const result = await client.query(
+                `CALL create_album_with_relations($1, $2, $3, $4, null)`,
+                [
+                    req.body.name,
+                    imageUrl?.url,
+                    artistIds,
+                    genreIds
+                ]
+            );
 
-            // 3. Create Associations using the album.id
-            if (parsedArtists.length > 0) {
-                for (const artist of parsedArtists) {
-                    await AlbumAuthor.create(
-                        album.id,
-                        artist.id,
-                        artist.is_primary || false,
-                        client
-                    );
-                }
+            // Fetch the newly created album
+            let albumId = result.rows[0]?.out_album_id || result.rows[0]?.id || result.rows[0]?.[result.fields?.find(f => f.name.includes("id"))?.name];
+            if (!albumId && result.rows.length > 0) {
+                albumId = Object.values(result.rows[0])[0];
             }
 
-            if (parsedGenres.length > 0) {
-                for (const genre of parsedGenres) {
-                    await AlbumGenre.create(album.id, genre.id, client);
-                }
+            let album = null;
+            if (albumId) {
+                album = await Album.findById(albumId);
             }
 
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, album, "Album created successfully"));
+            return res.status(200).json(new ApiResponse(200, album || { id: albumId }, "Album created successfully"));
         } catch (error) {
-            await client.query('ROLLBACK');
+            console.error("Error executing create_album_with_relations:", error);
             throw error;
         } finally {
             client.release();
@@ -477,185 +392,9 @@ export const deleteAlbum = async (req, res) => {
 }
 
 
-export const updateAlbum = async (req, res) => {
-    try {
-        const albumId = req.params.id;
-        if (!albumId) {
-            return res.status(400).json(new ApiError(400, "Album ID is required"));
-        }
-        const findAlbum = await Album.findById(albumId);
-        if (!findAlbum) {
-            return res.status(404).json(new ApiError(404, "Album not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const album = await Album.update(albumId, req.body, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, album, "Album updated successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in updateAlbum:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
-
-export const addArtistToAlbum = async (req, res) => {
-    try {
-        const albumId = req.body.album.id;
-        const artistId = req.body.artist.id;
-        if (!albumId || !artistId) {
-            return res.status(400).json(new ApiError(400, "Album ID and Artist ID are required"));
-        }
-        const findAlbum = await Album.findById(albumId);
-        if (!findAlbum) {
-            return res.status(404).json(new ApiError(404, "Album not found"));
-        }
-
-        const findArtist = await Artist.findById(artistId);
-        if (!findArtist) {
-            return res.status(404).json(new ApiError(404, "Artist not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const album = await Album.addArtist(albumId, artistId, req.body.role || false, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, album, "Artist added to album successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in addArtistToAlbum:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
-
-export const removeArtistFromAlbum = async (req, res) => {
-    try {
-        const albumId = req.body.album.id;
-        const artistId = req.body.artist.id;
-        if (!albumId || !artistId) {
-            return res.status(400).json(new ApiError(400, "Album ID and Artist ID are required"));
-        }
-        const findAlbum = await Album.findById(albumId);
-        if (!findAlbum) {
-            return res.status(404).json(new ApiError(404, "Album not found"));
-        }
-
-        const findArtist = await Artist.findById(artistId);
-        if (!findArtist) {
-            return res.status(404).json(new ApiError(404, "Artist not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const album = await Album.removeArtist(albumId, artistId, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, album, "Artist removed from album successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in removeArtistFromAlbum:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
 
 
-export const addGenreToAlbum = async (req, res) => {
-    try {
-        console.log("addGenreToAlbum request:", req.body);
-        const albumId = req.body.album.id;
-        const genreId = req.body.genre.id;
 
-        if (!albumId || !genreId) {
-            console.log("Missing ID", { albumId, genreId });
-            return res.status(400).json(new ApiError(400, "Album ID and Genre ID are required"));
-        }
-        const findAlbum = await Album.findById(albumId);
-        if (!findAlbum) {
-            console.log("Album not found", albumId);
-            return res.status(404).json(new ApiError(404, "Album not found"));
-        }
-
-        const findGenre = await Genre.findById(genreId);
-        if (!findGenre) {
-            console.log("Genre not found", genreId);
-            return res.status(404).json(new ApiError(404, "Genre not found"));
-        }
-
-        console.log("Adding genre to album...");
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const album = await Album.addGenre(albumId, genreId, client);
-            await client.query('COMMIT');
-            console.log("Genre added, result:", album);
-            return res.status(200).json(new ApiResponse(200, album, "Genre added to album successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in addGenreToAlbum:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
-
-export const removeGenreFromAlbum = async (req, res) => {
-    try {
-        const albumId = req.body.album.id;
-        const genreId = req.body.genre.id;
-
-        console.log("removeGenreFromAlbum params:", { albumId, genreId });
-
-        if (!albumId || !genreId) {
-            return res.status(400).json(new ApiError(400, "Album ID and Genre ID are required"));
-        }
-        const findAlbum = await Album.findById(albumId);
-        if (!findAlbum) {
-            return res.status(404).json(new ApiError(404, "Album not found"));
-        }
-
-        const findGenre = await Genre.findById(genreId);
-        if (!findGenre) {
-            return res.status(404).json(new ApiError(404, "Genre not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const album = await Album.removeGenre(albumId, genreId, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, album, "Genre removed from album successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in removeGenreFromAlbum:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
 
 
 
@@ -724,34 +463,7 @@ export const deleteArtist = async (req, res) => {
     }
 }
 
-export const updateArtist = async (req, res) => {
-    try {
-        const artistId = req.params.id;
-        if (!artistId) {
-            return res.status(400).json(new ApiError(400, "Artist ID is required"));
-        }
-        const findArtist = await Artist.findById(artistId);
-        if (!findArtist) {
-            return res.status(404).json(new ApiError(404, "Artist not found"));
-        }
 
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const artist = await Artist.update(artistId, req.body, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, artist, "Artist updated successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in updateArtist:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
 
 
 
@@ -809,37 +521,6 @@ export const deleteGenre = async (req, res) => {
     }
 }
 
-export const updateGenre = async (req, res) => {
-    try {
-        const genreId = req.params.id;
-        if (!genreId) {
-            return res.status(400).json(new ApiError(400, "Genre ID is required"));
-        }
-        const findGenre = await Genre.findById(genreId);
-        if (!findGenre) {
-            return res.status(404).json(new ApiError(404, "Genre not found"));
-        }
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            const genre = await Genre.update(genreId, {
-                name: req.body.name || null,
-                theme_color: req.body.theme_color || null
-            }, client);
-            await client.query('COMMIT');
-            return res.status(200).json(new ApiResponse(200, genre, "Genre updated successfully"));
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    } catch (error) {
-        console.error("Error in updateGenre:", error);
-        return res.status(500).json(new ApiError(500, "Internal server error", error));
-    }
-}
 
 
 // Podcast related methods

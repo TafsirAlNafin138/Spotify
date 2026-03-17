@@ -54,6 +54,8 @@ const PlayerContextProvider = (props) => {
     const [followedPodcasts, setFollowedPodcasts] = useState({});
     const [podcastFollowers, setPodcastFollowers] = useState({});
 
+    // NEW: User Playlists State
+    const [userPlaylists, setUserPlaylists] = useState([]);
 
     const audioRef = useRef();
     const seekBg = useRef();
@@ -151,10 +153,7 @@ const PlayerContextProvider = (props) => {
             }
         }
 
-        // Increment play count (fire-and-forget)
-        axiosInstance.post(`/tracks/${id}/play`).catch(err =>
-            console.error('Failed to increment play count:', err)
-        );
+
         // Wait for audio to be ready, then play
         if (audioRef.current) {
             // The src will be updated by the useEffect in App.jsx that watches track.file
@@ -471,9 +470,45 @@ const PlayerContextProvider = (props) => {
         }
     }, [isSignedIn, user?.id]);
 
+    const fetchUserPlaylists = useCallback(async () => {
+        if (!isSignedIn) {
+            setUserPlaylists([]);
+            return;
+        }
+        try {
+            const response = await axiosInstance.get('/playlists/user');
+            setUserPlaylists(response.data.data || response.data || []);
+        } catch (err) {
+            console.error('Error fetching user playlists:', err);
+        }
+    }, [isSignedIn]);
+
+    const createPlaylist = async (name) => {
+        try {
+             await axiosInstance.post('/playlists', { name });
+             fetchUserPlaylists();
+             return true;
+        } catch (err) {
+             console.error("Error creating playlist:", err);
+             return false;
+        }
+    };
+
+    const addTrackToPlaylist = async (playlistId, trackId) => {
+        try {
+             await axiosInstance.post(`/playlists/${playlistId}/add-track/${trackId}`);
+             fetchUserPlaylists(); 
+             return true;
+        } catch (err) {
+             console.error("Error adding track to playlist:", err);
+             return false;
+        }
+    };
+
     useEffect(() => {
         fetchLikedTracks();
-    }, [fetchLikedTracks]);
+        fetchUserPlaylists();
+    }, [fetchLikedTracks, fetchUserPlaylists]);
 
     useEffect(() => {
         if (track.id) {
@@ -638,7 +673,11 @@ const PlayerContextProvider = (props) => {
         isPodcastFollowed,
         podcastFollowers,
         setPodcastFollowers,
-        getPodcastFollowerCount
+        getPodcastFollowerCount,
+        userPlaylists,
+        fetchUserPlaylists,
+        createPlaylist,
+        addTrackToPlaylist
     };
 
     return (

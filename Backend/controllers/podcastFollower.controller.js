@@ -22,25 +22,12 @@ export const togglePodcastFollow = async (req, res) => {
             return res.status(400).json(new ApiError(400, "podcastId is required"));
         }
 
-        const alreadyFollowing = await PodcastFollower.isFollowing(user.id, podcastId);
+        const following = await PodcastFollower.toggleFollow(user.id, podcastId);
 
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            if (alreadyFollowing) {
-                await PodcastFollower.unfollowPodcast(user.id, podcastId, client);
-                await client.query('COMMIT');
-                return res.status(200).json(new ApiResponse(200, { following: false, podcastId }, "Podcast unfollowed successfully"));
-            } else {
-                await PodcastFollower.followPodcast(user.id, podcastId, client);
-                await client.query('COMMIT');
-                return res.status(200).json(new ApiResponse(200, { following: true, podcastId }, "Podcast followed successfully"));
-            }
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
+        if (following) {
+            return res.status(200).json(new ApiResponse(200, { following: true, podcastId }, "Podcast followed successfully"));
+        } else {
+            return res.status(200).json(new ApiResponse(200, { following: false, podcastId }, "Podcast unfollowed successfully"));
         }
     } catch (error) {
         console.error("Error in togglePodcastFollow:", error);

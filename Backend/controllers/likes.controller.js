@@ -23,25 +23,12 @@ export const toggleLike = async (req, res) => {
             return res.status(400).json(new ApiError(400, "Invalid track ID"));
         }
 
-        const alreadyLiked = await Like.isLiked(user.id, trackId);
-
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-            if (alreadyLiked) {
-                await Like.unlikeTrack(user.id, trackId, client);
-                await client.query('COMMIT');
-                return res.status(200).json(new ApiResponse(200, { liked: false, trackId }, "Track unliked"));
-            } else {
-                await Like.likeTrack(user.id, trackId, client);
-                await client.query('COMMIT');
-                return res.status(200).json(new ApiResponse(200, { liked: true, trackId }, "Track liked"));
-            }
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
+        const liked = await Like.toggleLike(user.id, trackId);
+        
+        if (liked) {
+            return res.status(200).json(new ApiResponse(200, { liked: true, trackId }, "Track liked"));
+        } else {
+            return res.status(200).json(new ApiResponse(200, { liked: false, trackId }, "Track unliked"));
         }
     } catch (error) {
         console.error("Error in toggleLike:", error);
