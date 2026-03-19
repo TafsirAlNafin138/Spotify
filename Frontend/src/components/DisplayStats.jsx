@@ -134,7 +134,7 @@ const DisplayStats = () => {
                     {categories.map(cat => (
                         <button
                             key={cat}
-                            onClick={() => setActiveCategory(cat)}
+                            onClick={() => { setActiveCategory(cat); setGenreFilter('All Genres'); }}
                             className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${activeCategory === cat ? 'bg-green-500 text-black' : 'text-zinc-400 hover:text-white'}`}
                         >
                             {cat}
@@ -191,7 +191,8 @@ const DisplayStats = () => {
                                 </div>
                             </div>
 
-                            {/* Genre Filter */}
+                            {/* Genre Filter - hidden for Artists */}
+                            {activeCategory !== 'Artists' && (
                             <div>
                                 <label className="text-[10px] uppercase font-black text-zinc-500 tracking-wider mb-2 block">Genre Segment</label>
                                 <select 
@@ -204,6 +205,7 @@ const DisplayStats = () => {
                                     ))}
                                 </select>
                             </div>
+                            )}
                         </div>
                     </div>
 
@@ -216,9 +218,11 @@ const DisplayStats = () => {
                             <h2 className="text-xl font-bold text-white mb-1">
                                 {activeMetric} {activeCategory}
                             </h2>
+                            {activeCategory !== 'Artists' && (
                             <p className="text-sm text-zinc-500">
                                 Segmented by <span className="text-zinc-300 font-semibold">{genreFilter}</span>
                             </p>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 text-[10px] uppercase font-black text-zinc-500 tracking-widest">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>

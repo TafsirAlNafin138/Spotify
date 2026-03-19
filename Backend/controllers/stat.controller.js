@@ -41,7 +41,8 @@ export const getLeaderboard = async (req, res) => {
         let query = "";
         let params = [`%${search}%`];
         
-        if (category === 'Songs') {
+        if (category === 'Songs') 
+        {
             if (metric === 'Most Liked') {
                 query = `
                     SELECT t.id, t.name as title, t.image, 
@@ -114,6 +115,66 @@ export const getLeaderboard = async (req, res) => {
                     LIMIT 10
                 `;
                 if (genre !== 'All Genres') params.push(genre);
+            }
+        }
+
+        if (category === 'Artists'){
+            if (metric === 'Most Liked') {
+                query = `
+                    SELECT a.id, a.name as title, a.image, 
+                           'Artist' as subtitle,
+                           COUNT(DISTINCT f.user_id) as value, 'Followers' as value_label
+                    FROM artists a
+                    LEFT JOIN followers f ON a.id = f.artist_id
+                    WHERE a.name ILIKE $1
+                    GROUP BY a.id
+                    ORDER BY value DESC
+                    LIMIT 10
+                `;
+            } 
+            else if (metric === 'Top Played') {
+                query = `
+                    SELECT a.id, a.name as title, a.image,
+                           'Artist' as subtitle,
+                           COALESCE(SUM(t.play_count), 0) as value, 'Plays' as value_label
+                    FROM artists a
+                    LEFT JOIN track_artists ta ON a.id = ta.artist_id
+                    LEFT JOIN tracks t ON ta.track_id = t.id
+                    WHERE a.name ILIKE $1
+                    GROUP BY a.id
+                    ORDER BY value DESC
+                    LIMIT 10
+                `;
+            }
+            else if (metric === 'Least Listening Time') {
+                query = `
+                    SELECT a.id, a.name as title, a.image,
+                           'Artist' as subtitle,
+                           COALESCE(SUM(lht.progress_seconds), 0) as value, 'Listening Time (s)' as value_label
+                    FROM artists a
+                    LEFT JOIN track_artists ta ON a.id = ta.artist_id
+                    LEFT JOIN listening_history_tracks lht ON ta.track_id = lht.track_id
+                    WHERE a.name ILIKE $1
+                    GROUP BY a.id
+                    ORDER BY value ASC
+                    LIMIT 10
+                `;
+            }
+            else if (metric === 'Trending') {
+                query = `
+                    SELECT a.id, a.name as title, a.image,
+                           'Artist' as subtitle,
+                           (COUNT(DISTINCT f.user_id) * 50 + COALESCE(SUM(lht.progress_seconds), 0) * 0.05) as value,
+                           'Trending Points' as value_label
+                    FROM artists a
+                    LEFT JOIN followers f ON a.id = f.artist_id
+                    LEFT JOIN track_artists ta ON a.id = ta.artist_id
+                    LEFT JOIN listening_history_tracks lht ON ta.track_id = lht.track_id
+                    WHERE a.name ILIKE $1
+                    GROUP BY a.id
+                    ORDER BY value DESC
+                    LIMIT 10
+                `;
             }
         }
 
