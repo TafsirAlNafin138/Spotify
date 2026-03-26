@@ -105,22 +105,22 @@ class AlbumGenre {
     }
 
     // Bulk add genres to album
-    static async bulkCreate(albumId, genreIds) {
-        const values = genreIds.map((_, index) =>
-            `($1, $${index + 2})`
-        ).join(', ');
+    // static async bulkCreate(albumId, genreIds) {
+    //     const values = genreIds.map((_, index) =>
+    //         `($1, $${index + 2})`
+    //     ).join(', ');
 
-        const params = [albumId, ...genreIds];
+    //     const params = [albumId, ...genreIds];
 
-        const result = await db.query(
-            `INSERT INTO album_genres (album_id, genre_id) 
-       VALUES ${values}
-       ON CONFLICT (album_id, genre_id) DO NOTHING
-       RETURNING *`,
-            params
-        );
-        return result.rows;
-    }
+    //     const result = await db.query(
+    //         `INSERT INTO album_genres (album_id, genre_id) 
+    //    VALUES ${values}
+    //    ON CONFLICT (album_id, genre_id) DO NOTHING
+    //    RETURNING *`,
+    //         params
+    //     );
+    //     return result.rows;
+    // }
 
     // Remove all genres from album
     static async deleteAllByAlbum(albumId) {
@@ -141,41 +141,41 @@ class AlbumGenre {
     }
 
     // Replace all genres for an album
-    static async replaceGenres(albumId, genreIds) {
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
+    // static async replaceGenres(albumId, genreIds) {
+    //     const client = await db.connect();
+    //     try {
+    //         await client.query('BEGIN');
 
-            // Remove existing genres
-            await client.query(
-                'DELETE FROM album_genres WHERE album_id = $1',
-                [albumId]
-            );
+    //         // Remove existing genres
+    //         await client.query(
+    //             'DELETE FROM album_genres WHERE album_id = $1',
+    //             [albumId]
+    //         );
 
-            // Add new genres
-            if (genreIds.length > 0) {
-                const values = genreIds.map((_, index) =>
-                    `($1, $${index + 2})`
-                ).join(', ');
+    //         // Add new genres
+    //         if (genreIds.length > 0) {
+    //             const values = genreIds.map((_, index) =>
+    //                 `($1, $${index + 2})`
+    //             ).join(', ');
 
-                const params = [albumId, ...genreIds];
+    //             const params = [albumId, ...genreIds];
 
-                await client.query(
-                    `INSERT INTO album_genres (album_id, genre_id) 
-           VALUES ${values}`,
-                    params
-                );
-            }
+    //             await client.query(
+    //                 `INSERT INTO album_genres (album_id, genre_id) 
+    //        VALUES ${values}`,
+    //                 params
+    //             );
+    //         }
 
-            await client.query('COMMIT');
-            return await this.getByAlbum(albumId);
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    //         await client.query('COMMIT');
+    //         return await this.getByAlbum(albumId);
+    //     } catch (error) {
+    //         await client.query('ROLLBACK');
+    //         throw error;
+    //     } finally {
+    //         client.release();
+    //     }
+    // }
 
     // Get albums with full details for a genre
     static async getAlbumsWithDetailsByGenre(genreId, limit = 50) {
@@ -220,20 +220,20 @@ class AlbumGenre {
     }
 
     // Get shared genres between two albums
-    static async getSharedGenres(albumId1, albumId2) {
-        const result = await db.query(
-            `SELECT g.*
-       FROM genres g
-       WHERE g.id IN (
-         SELECT genre_id FROM album_genres WHERE album_id = $1
-       ) AND g.id IN (
-         SELECT genre_id FROM album_genres WHERE album_id = $2
-       )
-       ORDER BY g.name ASC`,
-            [albumId1, albumId2]
-        );
-        return result.rows;
-    }
+    // static async getSharedGenres(albumId1, albumId2) {
+    //     const result = await db.query(
+    //         `SELECT g.*
+    //    FROM genres g
+    //    WHERE g.id IN (
+    //      SELECT genre_id FROM album_genres WHERE album_id = $1
+    //    ) AND g.id IN (
+    //      SELECT genre_id FROM album_genres WHERE album_id = $2
+    //    )
+    //    ORDER BY g.name ASC`,
+    //         [albumId1, albumId2]
+    //     );
+    //     return result.rows;
+    // }
 }
 
 export default AlbumGenre;

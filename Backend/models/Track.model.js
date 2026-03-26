@@ -29,22 +29,22 @@ class Track {
     return result.rows;
   }
 
-  static async update(id, { album_id, name, duration, path, image, track_number, is_explicit }, client = db) {
-    const result = await client.query(
-      `UPDATE tracks 
-       SET album_id = COALESCE($1, album_id),
-           name = COALESCE($2, name), 
-           duration = COALESCE($3, duration),
-           path = COALESCE($4, path),
-           image = COALESCE($5, image),
-           track_number = COALESCE($6, track_number),
-           is_explicit = COALESCE($7, is_explicit)
-       WHERE id = $8 
-       RETURNING *`,
-      [album_id, name, duration, path, image, track_number, is_explicit, id]
-    );
-    return result.rows[0];
-  }
+  // static async update(id, { album_id, name, duration, path, image, track_number, is_explicit }, client = db) {
+  //   const result = await client.query(
+  //     `UPDATE tracks 
+  //      SET album_id = COALESCE($1, album_id),
+  //          name = COALESCE($2, name), 
+  //          duration = COALESCE($3, duration),
+  //          path = COALESCE($4, path),
+  //          image = COALESCE($5, image),
+  //          track_number = COALESCE($6, track_number),
+  //          is_explicit = COALESCE($7, is_explicit)
+  //      WHERE id = $8 
+  //      RETURNING *`,
+  //     [album_id, name, duration, path, image, track_number, is_explicit, id]
+  //   );
+  //   return result.rows[0];
+  // }
 
   static async delete(id, client = db) {
     const result = await client.query(

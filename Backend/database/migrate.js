@@ -1,7 +1,7 @@
 import pool from '../config/database.js'
 
 async function setupDatabase() {
-    const sql = `
+  const sql = `
     CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -173,27 +173,16 @@ CREATE TABLE super_admins (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-
-CREATE TABLE admin_audit_logs (
-  id SERIAL PRIMARY KEY,
-  admin_id INTEGER NOT NULL REFERENCES super_admins(id) ON DELETE CASCADE,
-  action VARCHAR(50) NOT NULL, 
-  target_table VARCHAR(50) NOT NULL,
-  target_id INTEGER,
-  changes JSONB,
-  ip_address VARCHAR(45),
-  created_at TIMESTAMP DEFAULT NOW()
-);
   `;
 
-    try {
-        await pool.query(sql);
-        console.log("Successful");
-    } catch (err) {
-        console.error(err);
-    } finally {
-        process.exit();
-    }
+  try {
+    await pool.query(sql);
+    console.log("Successful");
+  } catch (err) {
+    console.error(err);
+  } finally {
+    process.exit();
+  }
 }
 
 setupDatabase();

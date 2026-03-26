@@ -139,41 +139,41 @@ class TrackGenre {
     }
 
     // Replace all genres for a track
-    static async replaceGenres(trackId, genreIds) {
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
+    // static async replaceGenres(trackId, genreIds) {
+    //     const client = await db.connect();
+    //     try {
+    //         await client.query('BEGIN');
 
-            // Remove existing genres
-            await client.query(
-                'DELETE FROM track_genres WHERE track_id = $1',
-                [trackId]
-            );
+    //         // Remove existing genres
+    //         await client.query(
+    //             'DELETE FROM track_genres WHERE track_id = $1',
+    //             [trackId]
+    //         );
 
-            // Add new genres
-            if (genreIds.length > 0) {
-                const values = genreIds.map((_, index) =>
-                    `($1, $${index + 2})`
-                ).join(', ');
+    //         // Add new genres
+    //         if (genreIds.length > 0) {
+    //             const values = genreIds.map((_, index) =>
+    //                 `($1, $${index + 2})`
+    //             ).join(', ');
 
-                const params = [trackId, ...genreIds];
+    //             const params = [trackId, ...genreIds];
 
-                await client.query(
-                    `INSERT INTO track_genres (track_id, genre_id) 
-           VALUES ${values}`,
-                    params
-                );
-            }
+    //             await client.query(
+    //                 `INSERT INTO track_genres (track_id, genre_id) 
+    //        VALUES ${values}`,
+    //                 params
+    //             );
+    //         }
 
-            await client.query('COMMIT');
-            return await this.getByTrack(trackId);
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    //         await client.query('COMMIT');
+    //         return await this.getByTrack(trackId);
+    //     } catch (error) {
+    //         await client.query('ROLLBACK');
+    //         throw error;
+    //     } finally {
+    //         client.release();
+    //     }
+    // }
 
     // Get genre statistics
     static async getGenreStats(genreId) {

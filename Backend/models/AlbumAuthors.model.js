@@ -126,26 +126,26 @@ class AlbumAuthor {
     }
 
     // Bulk add artists to album
-    static async bulkCreate(albumId, artists) {
-        const values = artists.map((artist, index) =>
-            `($1, $${index * 2 + 2}, $${index * 2 + 3})`
-        ).join(', ');
+    // static async bulkCreate(albumId, artists) {
+    //     const values = artists.map((artist, index) =>
+    //         `($1, $${index * 2 + 2}, $${index * 2 + 3})`
+    //     ).join(', ');
 
-        const params = [albumId];
-        artists.forEach(artist => {
-            params.push(artist.artistId, artist.isPrimary !== undefined ? artist.isPrimary : true);
-        });
+    //     const params = [albumId];
+    //     artists.forEach(artist => {
+    //         params.push(artist.artistId, artist.isPrimary !== undefined ? artist.isPrimary : true);
+    //     });
 
-        const result = await db.query(
-            `INSERT INTO album_authors (album_id, artist_id, is_primary) 
-       VALUES ${values}
-       ON CONFLICT (album_id, artist_id) DO UPDATE 
-       SET is_primary = EXCLUDED.is_primary
-       RETURNING *`,
-            params
-        );
-        return result.rows;
-    }
+    //     const result = await db.query(
+    //         `INSERT INTO album_authors (album_id, artist_id, is_primary) 
+    //    VALUES ${values}
+    //    ON CONFLICT (album_id, artist_id) DO UPDATE 
+    //    SET is_primary = EXCLUDED.is_primary
+    //    RETURNING *`,
+    //         params
+    //     );
+    //     return result.rows;
+    // }
 
     // Remove all artists from album
     static async deleteAllByAlbum(albumId) {
@@ -166,35 +166,35 @@ class AlbumAuthor {
     }
 
     // Set an artist as the sole primary artist
-    static async setSolePrimary(albumId, artistId) {
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
+    // static async setSolePrimary(albumId, artistId) {
+    //     const client = await db.connect();
+    //     try {
+    //         await client.query('BEGIN');
 
-            // Set all artists to non-primary
-            await client.query(
-                'UPDATE album_authors SET is_primary = false WHERE album_id = $1',
-                [albumId]
-            );
+    //         // Set all artists to non-primary
+    //         await client.query(
+    //             'UPDATE album_authors SET is_primary = false WHERE album_id = $1',
+    //             [albumId]
+    //         );
 
-            // Set specified artist as primary
-            const result = await client.query(
-                `UPDATE album_authors 
-         SET is_primary = true 
-         WHERE album_id = $1 AND artist_id = $2 
-         RETURNING *`,
-                [albumId, artistId]
-            );
+    //         // Set specified artist as primary
+    //         const result = await client.query(
+    //             `UPDATE album_authors 
+    //      SET is_primary = true 
+    //      WHERE album_id = $1 AND artist_id = $2 
+    //      RETURNING *`,
+    //             [albumId, artistId]
+    //         );
 
-            await client.query('COMMIT');
-            return result.rows[0];
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    //         await client.query('COMMIT');
+    //         return result.rows[0];
+    //     } catch (error) {
+    //         await client.query('ROLLBACK');
+    //         throw error;
+    //     } finally {
+    //         client.release();
+    //     }
+    // }
 }
 
 export default AlbumAuthor;

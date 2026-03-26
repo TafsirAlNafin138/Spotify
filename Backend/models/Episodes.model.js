@@ -29,21 +29,21 @@ class Episode {
         return result.rows;
     }
 
-    static async update(id, { title, description, duration, audio_path, release_date }, client = db) {
-        const result = await client.query(
-            `UPDATE episodes 
-       SET title = COALESCE($1, title), 
-           description = COALESCE($2, description),
-           duration = COALESCE($3, duration),
-           audio_path = COALESCE($4, audio_path),
-           release_date = COALESCE($5, release_date),
-           updated_at = NOW()
-       WHERE id = $6 
-       RETURNING *`,
-            [title, description, duration, audio_path, release_date, id]
-        );
-        return result.rows[0];
-    }
+    // static async update(id, { title, description, duration, audio_path, release_date }, client = db) {
+    //     const result = await client.query(
+    //         `UPDATE episodes 
+    //    SET title = COALESCE($1, title), 
+    //        description = COALESCE($2, description),
+    //        duration = COALESCE($3, duration),
+    //        audio_path = COALESCE($4, audio_path),
+    //        release_date = COALESCE($5, release_date),
+    //        updated_at = NOW()
+    //    WHERE id = $6 
+    //    RETURNING *`,
+    //         [title, description, duration, audio_path, release_date, id]
+    //     );
+    //     return result.rows[0];
+    // }
 
     static async delete(id, client = db) {
         const result = await client.query(

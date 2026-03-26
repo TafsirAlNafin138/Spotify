@@ -56,33 +56,33 @@ class PlaylistTrack {
     }
 
     // Get tracks with full details for a playlist
-    static async getTracksWithDetailsByPlaylist(playlistId) {
-        const result = await db.query(
-            `SELECT 
-        t.*,
-        pt.track_order,
-        pt.added_at,
-        json_agg(DISTINCT jsonb_build_object(
-          'id', a.id,
-          'name', a.name,
-          'image', a.image,
-          'artist_role', ta.artist_role
-        )) FILTER (WHERE a.id IS NOT NULL) as artists,
-        alb.id as album_id,
-        alb.name as album_name,
-        alb.image as album_image
-       FROM tracks t
-       INNER JOIN playlist_tracks pt ON t.id = pt.track_id
-       LEFT JOIN track_artists ta ON t.id = ta.track_id
-       LEFT JOIN artists a ON ta.artist_id = a.id
-       LEFT JOIN albums alb ON t.album_id = alb.id
-       WHERE pt.playlist_id = $1
-       GROUP BY t.id, pt.track_order, pt.added_at, alb.id
-       ORDER BY pt.track_order ASC NULLS LAST, pt.added_at ASC`,
-            [playlistId]
-        );
-        return result.rows;
-    }
+    // static async getTracksWithDetailsByPlaylist(playlistId) {
+    //     const result = await db.query(
+    //         `SELECT 
+    //     t.*,
+    //     pt.track_order,
+    //     pt.added_at,
+    //     json_agg(DISTINCT jsonb_build_object(
+    //       'id', a.id,
+    //       'name', a.name,
+    //       'image', a.image,
+    //       'artist_role', ta.artist_role
+    //     )) FILTER (WHERE a.id IS NOT NULL) as artists,
+    //     alb.id as album_id,
+    //     alb.name as album_name,
+    //     alb.image as album_image
+    //    FROM tracks t
+    //    INNER JOIN playlist_tracks pt ON t.id = pt.track_id
+    //    LEFT JOIN track_artists ta ON t.id = ta.track_id
+    //    LEFT JOIN artists a ON ta.artist_id = a.id
+    //    LEFT JOIN albums alb ON t.album_id = alb.id
+    //    WHERE pt.playlist_id = $1
+    //    GROUP BY t.id, pt.track_order, pt.added_at, alb.id
+    //    ORDER BY pt.track_order ASC NULLS LAST, pt.added_at ASC`,
+    //         [playlistId]
+    //     );
+    //     return result.rows;
+    // }
 
     // Get all playlists containing a track
     static async getByTrack(trackId) {
@@ -125,31 +125,31 @@ class PlaylistTrack {
     }
 
     // Bulk add tracks to playlist
-    static async bulkCreate(playlistId, trackIds) {
-        // Get current max order
-        const maxOrderResult = await db.query(
-            'SELECT COALESCE(MAX(track_order), 0) as max_order FROM playlist_tracks WHERE playlist_id = $1',
-            [playlistId]
-        );
-        let order = maxOrderResult.rows[0].max_order + 1;
+    // static async bulkCreate(playlistId, trackIds) {
+    //     // Get current max order
+    //     const maxOrderResult = await db.query(
+    //         'SELECT COALESCE(MAX(track_order), 0) as max_order FROM playlist_tracks WHERE playlist_id = $1',
+    //         [playlistId]
+    //     );
+    //     let order = maxOrderResult.rows[0].max_order + 1;
 
-        const values = trackIds.map((_, index) =>
-            `($1, $${index + 2}, $${trackIds.length + index + 2})`
-        ).join(', ');
+    //     const values = trackIds.map((_, index) =>
+    //         `($1, $${index + 2}, $${trackIds.length + index + 2})`
+    //     ).join(', ');
 
-        const params = [playlistId];
-        trackIds.forEach(trackId => params.push(trackId));
-        trackIds.forEach(() => params.push(order++));
+    //     const params = [playlistId];
+    //     trackIds.forEach(trackId => params.push(trackId));
+    //     trackIds.forEach(() => params.push(order++));
 
-        const result = await db.query(
-            `INSERT INTO playlist_tracks (playlist_id, track_id, track_order) 
-       VALUES ${values}
-       ON CONFLICT (playlist_id, track_id) DO NOTHING
-       RETURNING *`,
-            params
-        );
-        return result.rows;
-    }
+    //     const result = await db.query(
+    //         `INSERT INTO playlist_tracks (playlist_id, track_id, track_order) 
+    //    VALUES ${values}
+    //    ON CONFLICT (playlist_id, track_id) DO NOTHING
+    //    RETURNING *`,
+    //         params
+    //     );
+    //     return result.rows;
+    // }
 
     // Remove all tracks from playlist
     static async deleteAllByPlaylist(playlistId) {
@@ -170,85 +170,85 @@ class PlaylistTrack {
     }
 
     // Reorder playlist tracks
-    static async reorder(playlistId, trackOrderMap) {
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
+    // static async reorder(playlistId, trackOrderMap) {
+    //     const client = await db.connect();
+    //     try {
+    //         await client.query('BEGIN');
 
-            // Update each track's order
-            for (const [trackId, order] of Object.entries(trackOrderMap)) {
-                await client.query(
-                    `UPDATE playlist_tracks 
-           SET track_order = $1 
-           WHERE playlist_id = $2 AND track_id = $3`,
-                    [order, playlistId, trackId]
-                );
-            }
+    //         // Update each track's order
+    //         for (const [trackId, order] of Object.entries(trackOrderMap)) {
+    //             await client.query(
+    //                 `UPDATE playlist_tracks 
+    //        SET track_order = $1 
+    //        WHERE playlist_id = $2 AND track_id = $3`,
+    //                 [order, playlistId, trackId]
+    //             );
+    //         }
 
-            await client.query('COMMIT');
-            return await this.getByPlaylist(playlistId);
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    //         await client.query('COMMIT');
+    //         return await this.getByPlaylist(playlistId);
+    //     } catch (error) {
+    //         await client.query('ROLLBACK');
+    //         throw error;
+    //     } finally {
+    //         client.release();
+    //     }
+    // }
 
     // Move track to new position
-    static async moveTrack(playlistId, trackId, newOrder) {
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
+    // static async moveTrack(playlistId, trackId, newOrder) {
+    //     const client = await db.connect();
+    //     try {
+    //         await client.query('BEGIN');
 
-            // Get current order
-            const currentResult = await client.query(
-                'SELECT track_order FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2',
-                [playlistId, trackId]
-            );
-            const currentOrder = currentResult.rows[0]?.track_order;
+    //         // Get current order
+    //         const currentResult = await client.query(
+    //             'SELECT track_order FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2',
+    //             [playlistId, trackId]
+    //         );
+    //         const currentOrder = currentResult.rows[0]?.track_order;
 
-            if (currentOrder === undefined) {
-                throw new Error('Track not found in playlist');
-            }
+    //         if (currentOrder === undefined) {
+    //             throw new Error('Track not found in playlist');
+    //         }
 
-            // Shift other tracks
-            if (newOrder < currentOrder) {
-                // Moving up - shift tracks down
-                await client.query(
-                    `UPDATE playlist_tracks 
-           SET track_order = track_order + 1 
-           WHERE playlist_id = $1 AND track_order >= $2 AND track_order < $3`,
-                    [playlistId, newOrder, currentOrder]
-                );
-            } else if (newOrder > currentOrder) {
-                // Moving down - shift tracks up
-                await client.query(
-                    `UPDATE playlist_tracks 
-           SET track_order = track_order - 1 
-           WHERE playlist_id = $1 AND track_order > $2 AND track_order <= $3`,
-                    [playlistId, currentOrder, newOrder]
-                );
-            }
+    //         // Shift other tracks
+    //         if (newOrder < currentOrder) {
+    //             // Moving up - shift tracks down
+    //             await client.query(
+    //                 `UPDATE playlist_tracks 
+    //        SET track_order = track_order + 1 
+    //        WHERE playlist_id = $1 AND track_order >= $2 AND track_order < $3`,
+    //                 [playlistId, newOrder, currentOrder]
+    //             );
+    //         } else if (newOrder > currentOrder) {
+    //             // Moving down - shift tracks up
+    //             await client.query(
+    //                 `UPDATE playlist_tracks 
+    //        SET track_order = track_order - 1 
+    //        WHERE playlist_id = $1 AND track_order > $2 AND track_order <= $3`,
+    //                 [playlistId, currentOrder, newOrder]
+    //             );
+    //         }
 
-            // Update the moved track
-            const result = await client.query(
-                `UPDATE playlist_tracks 
-         SET track_order = $1 
-         WHERE playlist_id = $2 AND track_id = $3 
-         RETURNING *`,
-                [newOrder, playlistId, trackId]
-            );
+    //         // Update the moved track
+    //         const result = await client.query(
+    //             `UPDATE playlist_tracks 
+    //      SET track_order = $1 
+    //      WHERE playlist_id = $2 AND track_id = $3 
+    //      RETURNING *`,
+    //             [newOrder, playlistId, trackId]
+    //         );
 
-            await client.query('COMMIT');
-            return result.rows[0];
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    //         await client.query('COMMIT');
+    //         return result.rows[0];
+    //     } catch (error) {
+    //         await client.query('ROLLBACK');
+    //         throw error;
+    //     } finally {
+    //         client.release();
+    //     }
+    // }
 
     // Get playlist statistics
     static async getPlaylistStats(playlistId) {
