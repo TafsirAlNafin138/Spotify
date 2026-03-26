@@ -178,6 +178,66 @@ export const getLeaderboard = async (req, res) => {
             }
         }
 
+        if (category === 'Podcasts') {
+                if (metric === 'Most Liked') {
+                    query = `
+                        SELECT p.id, p.title as title, p.cover_image as image,
+                               'Podcast' as subtitle,
+                               COUNT(DISTINCT fp.user_id) as value, 'Followers' as value_label
+                        FROM podcasts p
+                        LEFT JOIN podcast_followers fp ON p.id = fp.podcast_id
+                        WHERE p.title ILIKE $1
+                        GROUP BY p.id
+                        ORDER BY value DESC
+                        LIMIT 10
+                    `;
+                }
+                else if (metric === 'Top Played') {
+                    query = `
+                        SELECT p.id, p.title as title, p.cover_image as image,
+                               'Podcast' as subtitle,
+                               COUNT(lhe.id) as value, 'Plays' as value_label
+                        FROM podcasts p
+                        LEFT JOIN episodes e ON p.id = e.podcast_id
+                        LEFT JOIN listening_history_episodes lhe ON e.id = lhe.episode_id
+                        WHERE p.title ILIKE $1
+                        GROUP BY p.id
+                        ORDER BY value DESC
+                        LIMIT 10
+                    `;
+                }
+                else if (metric === 'Least Listening Time') {
+                    query = `
+                        SELECT p.id, p.title as title, p.cover_image as image,
+                               'Podcast' as subtitle,
+                               COALESCE(SUM(lhe.progress_seconds), 0) as value, 'Listening Time (s)' as value_label
+                        FROM podcasts p
+                        LEFT JOIN episodes e ON p.id = e.podcast_id
+                        LEFT JOIN listening_history_episodes lhe ON e.id = lhe.episode_id
+                        WHERE p.title ILIKE $1
+                        GROUP BY p.id
+                        ORDER BY value ASC
+                        LIMIT 10
+                    `;
+                }
+                else if (metric === 'Trending') {
+                    query = `
+                        SELECT p.id, p.title as title, p.cover_image as image,
+                               'Podcast' as subtitle,
+                               (COUNT(DISTINCT fp.user_id) * 50 + COALESCE(SUM(lhe.progress_seconds), 0) * 0.05) as value,
+                               'Trending Points' as value_label
+                        FROM podcasts p
+                        LEFT JOIN podcast_followers fp ON p.id = fp.podcast_id
+                        LEFT JOIN episodes e ON p.id = e.podcast_id
+                        LEFT JOIN listening_history_episodes lhe ON e.id = lhe.episode_id
+                        WHERE p.title ILIKE $1
+                        GROUP BY p.id
+                        ORDER BY value DESC
+                        LIMIT 10
+                    `;
+                }
+            }
+
         if (!query) {
              return res.status(400).json(new ApiError(400, "Invalid category or metric"));
         }

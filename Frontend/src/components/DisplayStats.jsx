@@ -116,7 +116,8 @@ const DisplayStats = () => {
         { icon: Music, label: "Total Tracks", value: stats?.tracks || 0, color: "text-emerald-500 bg-emerald-500" },
         { icon: Album, label: "Total Albums", value: stats?.albums || 0, color: "text-blue-500 bg-blue-500" },
         { icon: Users, label: "Total Artists", value: stats?.artists || 0, color: "text-purple-500 bg-purple-500" },
-        { icon: UserCheck, label: "Total Users", value: stats?.users || 0, color: "text-orange-500 bg-orange-500" },
+        { icon: Mic, label: "Total Podcasts", value: stats?.podcasts || 0, color: "text-pink-500 bg-pink-500" },
+        { icon: Disc, label: "Total Episodes", value: stats?.episodes || 0, color: "text-yellow-500 bg-yellow-500" },
     ];
 
     return (
@@ -191,8 +192,8 @@ const DisplayStats = () => {
                                 </div>
                             </div>
 
-                            {/* Genre Filter - hidden for Artists */}
-                            {activeCategory !== 'Artists' && (
+                            {/* Genre Filter - hidden for Artists and Podcasts*/}
+                            {activeCategory !== 'Artists' && activeCategory !== 'Podcasts' && (
                             <div>
                                 <label className="text-[10px] uppercase font-black text-zinc-500 tracking-wider mb-2 block">Genre Segment</label>
                                 <select 
