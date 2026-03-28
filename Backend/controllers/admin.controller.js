@@ -213,7 +213,7 @@ export const createSong = async (req, res) => {
             );
 
             // Fetch the newly created track
-            const out_track_id = result.rows[0]?.out_track_id || result.rows[0]?.id || result.rows[0]?.track_id || result.rows[0]?.[result.fields?.find(f => f.name.includes("id"))?.name];
+            const out_track_id = result.rows[0]?.out_track_id;
 
             // Note: Procedures returning INOUT params might return the variables directly
             let songId = out_track_id;
