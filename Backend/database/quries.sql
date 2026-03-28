@@ -1,6 +1,6 @@
--- ---------------------------------------------------------
+
 -- 1. Auto Play Count Trigger
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION trg_increment_play_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -15,9 +15,9 @@ AFTER INSERT ON listening_history_tracks
 FOR EACH ROW EXECUTE FUNCTION trg_increment_play_count();
 
 
--- ---------------------------------------------------------
+
 -- 2. Auto Playlist Track Order Trigger
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION trg_auto_playlist_track_order()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -35,9 +35,8 @@ BEFORE INSERT ON playlist_tracks
 FOR EACH ROW EXECUTE FUNCTION trg_auto_playlist_track_order();
 
 
--- ---------------------------------------------------------
 -- 3. Auto updated_at Timestamp Triggers
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION trg_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -46,26 +45,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS set_updated_at ON tracks;
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON tracks
-FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
+-- DROP TRIGGER IF EXISTS set_updated_at ON tracks;
+-- CREATE TRIGGER set_updated_at BEFORE UPDATE ON tracks
+-- FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
-DROP TRIGGER IF EXISTS set_updated_at ON artists;
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON artists
-FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
+-- DROP TRIGGER IF EXISTS set_updated_at ON artists;
+-- CREATE TRIGGER set_updated_at BEFORE UPDATE ON artists
+-- FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
 DROP TRIGGER IF EXISTS set_updated_at ON playlists;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON playlists
 FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
-DROP TRIGGER IF EXISTS set_updated_at ON albums;
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON albums
-FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
+-- DROP TRIGGER IF EXISTS set_updated_at ON albums;
+-- CREATE TRIGGER set_updated_at BEFORE UPDATE ON albums
+-- FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
 
--- ---------------------------------------------------------
 -- 4. Auto-capitalize Artist Name Trigger
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION trg_capitalize_artist_name()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -79,9 +77,9 @@ CREATE TRIGGER before_artist_name
 BEFORE INSERT OR UPDATE ON artists
 FOR EACH ROW EXECUTE FUNCTION trg_capitalize_artist_name();
 
--- ---------------------------------------------------------
+
 -- 5. Toggle Track Like Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION toggle_track_like(p_user_id INT, p_track_id INT)
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -96,9 +94,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- ---------------------------------------------------------
 -- 6. Toggle Artist Follow Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION toggle_artist_follow(p_user_id INT, p_artist_id INT)
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -113,9 +110,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- ---------------------------------------------------------
 -- 7. Toggle Podcast Follow Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION toggle_podcast_follow(p_user_id INT, p_podcast_id INT)
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -130,9 +126,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- ---------------------------------------------------------
 -- 8. Create Album with Relations PROCEDURE
--- ---------------------------------------------------------
+
 CREATE OR REPLACE PROCEDURE create_album_with_relations(
   p_name TEXT, p_image TEXT, p_artist_ids INT[], p_genre_ids INT[],
   INOUT out_album_id INT DEFAULT NULL
@@ -160,9 +155,8 @@ END;
 $$;
 
 
--- ---------------------------------------------------------
 -- 9. Create Track with Relations PROCEDURE
--- ---------------------------------------------------------
+
 CREATE OR REPLACE PROCEDURE create_track_with_relations(
   p_album_id INT, p_name TEXT, p_duration INT, p_path TEXT, p_image TEXT,
   p_track_number INT, p_is_explicit BOOLEAN,
@@ -198,9 +192,8 @@ $$;
 
 
 
--- ---------------------------------------------------------
 -- 10. Register User PROCEDURE
--- ---------------------------------------------------------
+
 CREATE OR REPLACE PROCEDURE register_user(
   p_name TEXT, p_email TEXT, p_password_hash TEXT, p_image TEXT, p_refresh_token_hash TEXT,
   INOUT out_user_id INT DEFAULT NULL
@@ -217,9 +210,8 @@ END;
 $$;
 
 
--- ---------------------------------------------------------
 -- 11. Get Admin Stats Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION get_admin_stats()
 RETURNS TABLE(
   total_songs BIGINT, total_albums BIGINT, total_users BIGINT,
@@ -238,9 +230,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- ---------------------------------------------------------
 -- 12. Get Artist Stats Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION get_artist_stats(p_artist_id INT)
 RETURNS TABLE(album_count BIGINT, track_count BIGINT, followers_count BIGINT, total_plays BIGINT) AS $$
 BEGIN
@@ -254,9 +245,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- ---------------------------------------------------------
+
 -- 13. Made For You Recommendation Function
--- ---------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION get_made_for_you(p_user_id INT, p_limit INT DEFAULT 50)
 RETURNS SETOF tracks AS $$
 BEGIN
