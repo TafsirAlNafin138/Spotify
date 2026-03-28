@@ -64,6 +64,7 @@ export const register = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development',
             sameSite: 'strict',
+            path: '/api/auth/refresh',
             maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
         });
 
@@ -115,6 +116,7 @@ export const login = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development',
             sameSite: 'strict',
+            path: '/api/auth/refresh',
             maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
         });
 
@@ -180,6 +182,7 @@ export const refreshToken = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'development',
             sameSite: 'strict',
+            path: '/api/auth/refresh',
             maxAge: 1 * 24 * 60 * 60 * 1000 // 1 day
         });
 
@@ -193,7 +196,7 @@ export const refreshToken = async (req, res) => {
 export const logout = async (req, res) => {
     try {
         // Clear the refresh token cookie
-        res.clearCookie('refreshToken');
+        res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
 
         res.status(200).json({ success: true, message: "Logged out successfully" });
     } catch (error) {
