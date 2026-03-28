@@ -34,8 +34,7 @@ export const search = async (req, res) => {
         }
 
         // type === 'all' — run all in parallel
-        // Promise.all is used to execute multiple independent search queries in parallel,
-        // 'new Promise((resolve, reject) => ...)' syntax because the search methods 
+        // Promise.all is used to execute multiple independent search queries in parallel
         // already return Promises that can be passed directly to Promise.all.
         const [songs, artists, podcasts] = await Promise.all([
             Track.search(query, 10),

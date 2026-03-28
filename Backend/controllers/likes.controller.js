@@ -23,12 +23,22 @@ export const toggleLike = async (req, res) => {
             return res.status(400).json(new ApiError(400, "Invalid track ID"));
         }
 
-        const liked = await Like.toggleLike(user.id, trackId);
-        
-        if (liked) {
-            return res.status(200).json(new ApiResponse(200, { liked: true, trackId }, "Track liked"));
-        } else {
-            return res.status(200).json(new ApiResponse(200, { liked: false, trackId }, "Track unliked"));
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            const liked = await Like.toggleLike(user.id, trackId, client);
+            await client.query('COMMIT');
+            
+            if (liked) {
+                return res.status(200).json(new ApiResponse(200, { liked: true, trackId }, "Track liked"));
+            } else {
+                return res.status(200).json(new ApiResponse(200, { liked: false, trackId }, "Track unliked"));
+            }
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
         }
     } catch (error) {
         console.error("Error in toggleLike:", error);
@@ -92,14 +102,25 @@ export const checkMultipleLikes = async (req, res) => {
             return res.status(400).json(new ApiError(400, "trackIds must be a non-empty array"));
         }
 
-        const likedRows = await Like.checkMultipleLikes(user.id, trackIds);
-        // Convert to a map: { trackId: true }
-        const likedMap = {};
-        likedRows.forEach(row => {
-            likedMap[row.track_id] = true;
-        });
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            const likedRows = await Like.checkMultipleLikes(user.id, trackIds, client);
+            await client.query('COMMIT');
+            
+            // Convert to a map: { trackId: true }
+            const likedMap = {};
+            likedRows.forEach(row => {
+                likedMap[row.track_id] = true;
+            });
 
-        return res.status(200).json(new ApiResponse(200, likedMap, "Multiple like statuses checked"));
+            return res.status(200).json(new ApiResponse(200, likedMap, "Multiple like statuses checked"));
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     } catch (error) {
         console.error("Error in checkMultipleLikes:", error);
         return res.status(500).json(new ApiError(500, "Internal server error", error));

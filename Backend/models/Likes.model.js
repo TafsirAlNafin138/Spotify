@@ -80,8 +80,8 @@ class Like {
     }
 
     // Bulk check if user liked multiple tracks
-    static async checkMultipleLikes(userId, trackIds) {
-        const result = await db.query(
+    static async checkMultipleLikes(userId, trackIds, client = db) {
+        const result = await client.query(
             `SELECT track_id, true as is_liked
        FROM likes
        WHERE user_id = $1 AND track_id = ANY($2)`,
