@@ -192,25 +192,7 @@ $$;
 
 
 
--- 10. Register User PROCEDURE
-
-CREATE OR REPLACE PROCEDURE register_user(
-  p_name TEXT, p_email TEXT, p_password_hash TEXT, p_image TEXT, p_refresh_token_hash TEXT,
-  INOUT out_user_id INT DEFAULT NULL
-) 
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  INSERT INTO users (name, email, password_hash, image)
-  VALUES (p_name, p_email, p_password_hash, p_image)
-  RETURNING id INTO out_user_id;
-
-  UPDATE users SET refresh_token_hash = p_refresh_token_hash WHERE id = out_user_id;
-END;
-$$;
-
-
--- 11. Get Admin Stats Function
+-- 10. Get Admin Stats Function
 
 CREATE OR REPLACE FUNCTION get_admin_stats()
 RETURNS TABLE(
@@ -230,7 +212,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- 12. Get Artist Stats Function
+-- 11. Get Artist Stats Function
 
 CREATE OR REPLACE FUNCTION get_artist_stats(p_artist_id INT)
 RETURNS TABLE(album_count BIGINT, track_count BIGINT, followers_count BIGINT, total_plays BIGINT) AS $$
@@ -246,7 +228,7 @@ $$ LANGUAGE plpgsql;
 
 
 
--- 13. Made For You Recommendation Function
+-- 12. Made For You Recommendation Function
 
 CREATE OR REPLACE FUNCTION get_made_for_you(p_user_id INT, p_limit INT DEFAULT 50)
 RETURNS SETOF tracks AS $$
