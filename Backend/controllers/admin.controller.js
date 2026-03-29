@@ -179,6 +179,8 @@ export const createSong = async (req, res) => {
 
         const client = await db.connect();
         try {
+            await client.query('BEGIN');
+
             // Parse artists and genres
             let artistData = null;
             if (req.body.artists) {
@@ -226,8 +228,10 @@ export const createSong = async (req, res) => {
                 song = await Track.findById(songId);
             }
 
+            await client.query('COMMIT');
             return res.status(200).json(new ApiResponse(200, song || { id: songId }, "Song created successfully"));
         } catch (error) {
+            await client.query('ROLLBACK');
             console.error("Error executing create_track_with_relations:", error);
             throw error;
         } finally {
@@ -325,6 +329,7 @@ export const createAlbum = async (req, res) => {
 
         const client = await db.connect();
         try {
+            await client.query('BEGIN');
             const artistIds = parsedArtists.length > 0 ? parsedArtists.map(a => a.id) : null;
             const genreIds = parsedGenres.length > 0 ? parsedGenres.map(g => g.id) : null;
 
@@ -349,8 +354,10 @@ export const createAlbum = async (req, res) => {
                 album = await Album.findById(albumId);
             }
 
+            await client.query('COMMIT');
             return res.status(200).json(new ApiResponse(200, album || { id: albumId }, "Album created successfully"));
         } catch (error) {
+            await client.query('ROLLBACK');
             console.error("Error executing create_album_with_relations:", error);
             throw error;
         } finally {
