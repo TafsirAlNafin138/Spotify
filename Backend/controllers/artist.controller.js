@@ -58,20 +58,26 @@ export const getArtistTracks = async (req, res) => {
 
 // Toggle Follow Artist
 export const toggleFollowArtist = async (req, res) => {
+     const client = await db.connect();
+          
     try {
         const userId = req.userId || (req.user && req.user.id);
         const artistId = req.params.id;
+        await client.query('BEGIN');
 
         if (!userId) {
+            client.query('ROLLBACK');
             return res.status(401).json(new ApiError(401, "Unauthorized"));
         }
 
         const artist = await Artist.findById(artistId);
         if (!artist) {
+            client.query('ROLLBACK');
             return res.status(404).json(new ApiError(404, "Artist not found"));
         }
 
-        const following = await Follower.toggleFollow(userId, artistId);
+        const following = await Follower.toggleFollow(userId, artistId, client);
+        await client.query('COMMIT');
         
         if (following) {
             return res.status(200).json(new ApiResponse(200, { isFollowing: true }, "Followed artist successfully"));
@@ -79,8 +85,11 @@ export const toggleFollowArtist = async (req, res) => {
             return res.status(200).json(new ApiResponse(200, { isFollowing: false }, "Unfollowed artist successfully"));
         }
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error("Error in toggleFollowArtist:", error);
         return res.status(500).json(new ApiError(500, "Internal server error", error));
+    }finally {
+        client.release();
     }
 }
 
