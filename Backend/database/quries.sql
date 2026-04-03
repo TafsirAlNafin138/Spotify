@@ -37,13 +37,13 @@ FOR EACH ROW EXECUTE FUNCTION trg_auto_playlist_track_order();
 
 -- 3. Auto updated_at Timestamp Triggers
 
-CREATE OR REPLACE FUNCTION trg_set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE OR REPLACE FUNCTION trg_set_updated_at()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--   NEW.updated_at = NOW();
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
 -- DROP TRIGGER IF EXISTS set_updated_at ON tracks;
 -- CREATE TRIGGER set_updated_at BEFORE UPDATE ON tracks
@@ -53,9 +53,9 @@ $$ LANGUAGE plpgsql;
 -- CREATE TRIGGER set_updated_at BEFORE UPDATE ON artists
 -- FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
-DROP TRIGGER IF EXISTS set_updated_at ON playlists;
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON playlists
-FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
+-- DROP TRIGGER IF EXISTS set_updated_at ON playlists;
+-- CREATE TRIGGER set_updated_at BEFORE UPDATE ON playlists
+-- FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
 -- DROP TRIGGER IF EXISTS set_updated_at ON albums;
 -- CREATE TRIGGER set_updated_at BEFORE UPDATE ON albums
@@ -64,18 +64,18 @@ FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
 -- 4. Auto-capitalize Artist Name Trigger
 
-CREATE OR REPLACE FUNCTION trg_capitalize_artist_name()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.name = INITCAP(NEW.name);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE OR REPLACE FUNCTION trg_capitalize_artist_name()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--   NEW.name = INITCAP(NEW.name);
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS before_artist_name ON artists;
-CREATE TRIGGER before_artist_name
-BEFORE INSERT OR UPDATE ON artists
-FOR EACH ROW EXECUTE FUNCTION trg_capitalize_artist_name();
+-- DROP TRIGGER IF EXISTS before_artist_name ON artists;
+-- CREATE TRIGGER before_artist_name
+-- BEFORE INSERT OR UPDATE ON artists
+-- FOR EACH ROW EXECUTE FUNCTION trg_capitalize_artist_name();
 
 
 -- 5. Toggle Track Like Function
