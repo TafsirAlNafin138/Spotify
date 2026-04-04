@@ -160,21 +160,6 @@ const DisplayStats = () => {
                         </h3>
                         
                         <div className="space-y-6">
-                            {/* Search */}
-                            <div>
-                                <label className="text-[10px] uppercase font-black text-zinc-500 tracking-wider mb-2 block">Search {activeCategory}</label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                                    <input 
-                                        type="text" 
-                                        placeholder={`Search for a specific ${activeCategory.slice(0, -1).toLowerCase()}...`}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
                             {/* Metric Selector */}
                             <div>
                                 <label className="text-[10px] uppercase font-black text-zinc-500 tracking-wider mb-2 block">Analytical Metric</label>
