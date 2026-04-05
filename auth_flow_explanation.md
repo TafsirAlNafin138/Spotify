@@ -1,6 +1,6 @@
 # Authentication and User Flow Explanation
 
-This document explains how the different parts of your backend (Middleware, Controllers, and Models) work together to handle user sessions and data safely.
+This document explains how the different parts of backend (Middleware, Controllers, and Models) work together to handle user sessions and data safely.
 
 ## 1. How Auth Middleware Syncs with Auth Controller
 
