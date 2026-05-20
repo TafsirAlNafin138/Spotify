@@ -144,7 +144,8 @@ const DisplayPlaylist = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-[16px_1fr_1fr_40px_80px] gap-4 items-center px-2 py-2 text-[#a7a7a7] text-sm border-b border-gray-700 mb-2">
+                        {/* Tracks Header (hidden on mobile) */}
+                        <div className="hidden md:grid grid-cols-[16px_1fr_1fr_40px_80px] gap-4 items-center px-2 py-2 text-[#a7a7a7] text-sm border-b border-gray-700 mb-2">
                             <p>#</p>
                             <p>Title</p>
                             <p>Artist</p>
@@ -155,9 +156,9 @@ const DisplayPlaylist = () => {
                         {playlist.tracks.map((track, index) => (
                             <div
                                 key={track.id}
-                                className="grid grid-cols-[16px_1fr_1fr_40px_80px] gap-4 items-center px-2 py-2 rounded hover:bg-[#ffffff26] cursor-pointer group"
+                                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[16px_1fr_1fr_40px_80px] gap-2 md:gap-4 items-center px-2 py-2 rounded hover:bg-[#ffffff26] cursor-pointer group"
                             >
-                                <p className="text-[#a7a7a7] text-sm">{index + 1}</p>
+                                <p className="text-[#a7a7a7] text-sm hidden md:block">{index + 1}</p>
                                 <div
                                     className="flex items-center gap-3 overflow-hidden"
                                     onClick={() => {
@@ -167,24 +168,31 @@ const DisplayPlaylist = () => {
                                     }}
                                 >
                                     <img
-                                        className="w-10 h-10 object-cover rounded flex-shrink-0"
+                                        className="w-10 h-10 object-cover rounded flex-shrink-0 shadow-md"
                                         src={track.image_url || track.image}
                                         alt={track.title || track.name}
                                     />
-                                    <span className="text-white truncate">{track.title || track.name}</span>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-white text-sm md:text-base font-medium truncate">{track.title || track.name}</span>
+                                        <span className="text-xs text-zinc-400 md:hidden truncate mt-0.5">
+                                            {track.artists?.map(artist => artist.name).join(', ') || track.artist || 'Unknown Artist'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <p className="text-[15px] text-[#a7a7a7] truncate">{track.artists?.map(artist => artist.name).join(', ') || track.artist || ''}</p>
+                                <p className="text-[15px] text-[#a7a7a7] truncate hidden md:block">
+                                    {track.artists?.map(artist => artist.name).join(', ') || track.artist || ''}
+                                </p>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleRemoveTrack(track.id);
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 hover:scale-110 transition-all text-zinc-400 hover:text-white"
+                                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:scale-110 transition-all text-zinc-400 hover:text-white p-2 flex items-center justify-center"
                                     title="Remove from Playlist"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
-                                <p className="text-[15px] text-[#a7a7a7] text-right">{convertDuration(track.duration)}</p>
+                                <p className="text-[15px] text-[#a7a7a7] text-right hidden md:block">{convertDuration(track.duration)}</p>
                             </div>
                         ))}
                     </>

@@ -92,19 +92,19 @@ const DisplayArtist = () => {
                                         playWithId(item.id);
                                     }}
                                     key={index}
-                                    className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer rounded"
+                                    className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px] gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer rounded"
                                 >
-                                    <div className="text-white flex items-center col-span-2 sm:col-span-3">
-                                        <b className="mr-4 text-[#a7a7a7]">{index + 1}</b>
-                                        <img className="inline w-10 h-10 mr-5 object-cover" src={item.image} alt="" />
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold text-white">{item.name}</span>
+                                    <div className="text-white flex items-center min-w-0">
+                                        <b className="mr-3 text-[#a7a7a7] text-sm hidden sm:block">{index + 1}</b>
+                                        <img className="inline w-10 h-10 mr-4 object-cover rounded shadow-md flex-shrink-0" src={item.image} alt="" />
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="font-semibold text-white text-sm md:text-base truncate">{item.name}</span>
                                             {item.is_explicit && (
-                                                <span className="text-[10px] bg-gray-400 text-black px-1 rounded-sm w-fit mt-1">E</span>
+                                                <span className="text-[10px] bg-zinc-500 text-white px-1 rounded-sm w-fit mt-1 font-semibold">E</span>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="text-[15px] flex items-center justify-end pr-4">
+                                    <div className="text-xs md:text-sm font-medium tabular-nums text-right pr-2">
                                         {/* Format duration assuming seconds */}
                                         {Math.floor(item.duration / 60)}:{Math.floor(item.duration % 60).toString().padStart(2, '0')}
                                     </div>

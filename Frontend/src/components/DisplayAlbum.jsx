@@ -90,15 +90,15 @@ const DisplayAlbum = () => {
           </div>
         )}
 
-        {/* Tracks Header */}
-        <div className="grid grid-cols-[16px_1fr_1fr_40px_80px] sm:grid-cols-[16px_1fr_1fr_40px_80px] mt-4 mb-4 pl-2 text-[#a7a7a7] gap-4 items-center">
+        {/* Tracks Header (hidden on mobile) */}
+        <div className="hidden md:grid grid-cols-[16px_1fr_1fr_40px_80px] sm:grid-cols-[16px_1fr_1fr_40px_80px] mt-4 mb-4 pl-2 text-[#a7a7a7] gap-4 items-center">
           <p>#</p>
           <p><b>Title</b></p>
           <p>Album</p>
           <p></p>
           <p className="text-right"><img className="w-4 inline" src={assets.clock_icon} alt="Time Icon" /></p>
         </div>
-        <hr className="border-t border-gray-700 mb-4" />
+        <hr className="hidden md:block border-t border-gray-700 mb-4" />
 
         {/* Tracks List */}
         <div>
@@ -106,11 +106,11 @@ const DisplayAlbum = () => {
             tracks.map((track, index) => (
               <div
                 key={track.id}
-                className="grid grid-cols-[16px_1fr_1fr_40px_80px] items-center gap-4 py-2 px-2 rounded hover:bg-[#ffffff26] cursor-pointer group"
+                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[16px_1fr_1fr_40px_80px] items-center gap-2 md:gap-4 py-2 px-2 rounded hover:bg-[#ffffff26] cursor-pointer group"
               >
-                <p className="text-[#a7a7a7] text-sm">{index + 1}</p>
+                <p className="text-[#a7a7a7] text-sm hidden md:block">{index + 1}</p>
                 <div
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-3 overflow-hidden"
                   onClick={() => {
                     setActiveAlbum({ tracks });
                     setActivePlaylist(null);
@@ -118,25 +118,30 @@ const DisplayAlbum = () => {
                   }}
                 >
                   <img
-                    className="w-10 h-10 object-cover rounded"
+                    className="w-10 h-10 object-cover rounded flex-shrink-0 shadow-md"
                     src={track.image_url || track.image || album.image_url}
                     alt={track.title || track.name}
                   />
-                  <span className="text-white">{track.title || track.name}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-white text-sm md:text-base font-medium truncate">{track.title || track.name}</span>
+                    <span className="text-xs text-zinc-400 md:hidden truncate mt-0.5">
+                      {album.artists?.map(a => a.name).join(', ') || 'Various Artists'}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[15px] text-[#a7a7a7]">{album.title || album.name}</p>
+                <p className="text-[15px] text-[#a7a7a7] truncate hidden md:block">{album.title || album.name}</p>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleLike(track.id);
                   }}
-                  className={`transition-all ${isLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                  className={`transition-all p-2 flex items-center justify-center ${isLiked(track.id) ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 text-zinc-400'}`}
                   title={isLiked(track.id) ? 'Unlike' : 'Like'}
                 >
                   <svg
                     className={`w-4 h-4 transition-all ${isLiked(track.id)
                       ? 'fill-green-500 text-green-500'
-                      : 'fill-none text-white hover:text-green-400'
+                      : 'fill-none text-zinc-400 md:text-white hover:text-green-400'
                       }`}
                     stroke="currentColor"
                     strokeWidth="2"
@@ -145,7 +150,7 @@ const DisplayAlbum = () => {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
                 </button>
-                <p className="text-[15px] text-[#a7a7a7] text-right">{convertDuration(track.duration)}</p>
+                <p className="text-[15px] text-[#a7a7a7] text-right hidden md:block">{convertDuration(track.duration)}</p>
               </div>
             ))
           ) : (

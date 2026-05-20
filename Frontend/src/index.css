@@ -112,45 +112,15 @@
     border-radius: 0 !important;
   }
 
-  .player-container {
-    height: auto !important;
-    padding: 10px 15px !important;
-    flex-wrap: wrap;
-    position: fixed;
-    bottom: 56px; /* Space for MobileNav */
-    z-index: 40;
-    backdrop-filter: blur(10px);
-    background-color: rgba(24, 24, 24, 0.9) !important;
-    border-bottom: 1px solid #282828;
-  }
-
-  .player-info {
-    width: 60% !important;
-    display: flex !important;
-  }
-
-  .player-controls {
-    width: 40% !important;
-  }
-
-  .player-extra {
-    display: none !important;
-  }
-
-  .player-progress-bar {
-    width: 100%;
-    order: 3;
-    margin-top: 5px;
-  }
-
   .mobile-nav {
     display: flex !important;
   }
 
-  /* Adjust display padding on mobile */
+  /* Adjust display padding on mobile to clear bottom floating bars */
   .display-page {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
+    padding-bottom: 140px !important;
   }
 }
 
@@ -159,3 +129,87 @@
     display: none !important;
   }
 }
+
+/* Animations for Fullscreen Player Overlay */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.3, 0, 0, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* High-fidelity custom seek slider */
+.spotify-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #535353;
+  border-radius: 2px;
+  outline: none;
+  transition: background 0.1s ease;
+  cursor: pointer;
+}
+
+.spotify-slider:hover {
+  background: #888888;
+}
+
+.spotify-slider::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.spotify-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #1db954;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-top: -4px; /* Align thumb correctly on Chromium browsers */
+}
+
+.spotify-slider:hover::-webkit-slider-thumb,
+.spotify-slider:active::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.spotify-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: #1db954;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.spotify-slider:hover::-moz-range-thumb,
+.spotify-slider:active::-moz-range-thumb {
+  opacity: 1;
+}
