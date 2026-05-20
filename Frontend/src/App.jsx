@@ -10,6 +10,7 @@ import { useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { runAllTests } from './utils/testConnection';
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import MobileNav from "./components/MobileNav.jsx";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -81,20 +82,23 @@ const MainApp = () => {
   const isPlayerHiddenRoute = location.pathname.startsWith("/admin") || location.pathname === "/history";
 
   return (
-    <div className="h-screen bg-neutral-900 flex flex-col">
-      <div className="h-[90%] flex">
-        <div style={{ width: `${sidebarWidth}%` }} className="h-full">
+    <div className="h-screen bg-neutral-900 flex flex-col overflow-hidden">
+      <div className="h-[90%] md:h-[88%] lg:h-[90%] flex flex-1 overflow-hidden">
+        <div style={{ width: `${sidebarWidth}%` }} className="h-full sidebar-resizable">
           <Sidebar />
         </div>
-        <SlideHandler onDrag={handleMouseDown} />
+        <div className="slide-handler">
+          <SlideHandler onDrag={handleMouseDown} />
+        </div>
         <div
           style={{ width: `${100 - sidebarWidth - 4}%` }}
-          className="h-full"
+          className="h-full display-container"
         >
           <Display />
         </div>
       </div>
       {!isPlayerHiddenRoute && <Player />}
+      <MobileNav />
       <audio ref={audioRef} src={track?.file} preload="auto"></audio>
     </div>
   );

@@ -35,8 +35,8 @@ const Player = () => {
     };
 
     return (
-        <div className="h-[12%] bg-[#181818] border-t border-[#282828] flex justify-between items-center text-white px-6 py-2">
-            <div className="flex items-center gap-4 w-[25%] hidden md:flex">
+        <div className="player-container h-[12%] bg-[#181818] border-t border-[#282828] flex justify-between items-center text-white px-6 py-2">
+            <div className="player-info flex items-center gap-4 w-[25%] hidden md:flex">
                 <img className="w-14 h-14 rounded-md shadow-lg object-cover" src={track.image} alt="" />
                 <div className="flex flex-col flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate hover:underline cursor-pointer">{track.name}</p>
@@ -44,9 +44,9 @@ const Player = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col items-center gap-2 w-full md:w-[40%]">
+            <div className="player-controls flex flex-col items-center gap-2 w-full md:w-[40%]">
                 <div className="flex items-center gap-6">
-                    <img className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all" src={assets.shuffle_icon} alt="Shuffle" />
+                    <img className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all hidden sm:block" src={assets.shuffle_icon} alt="Shuffle" />
                     <img onClick={prevTrack} className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all" src={assets.prev_icon} alt="Prev" />
                     {playerState ?
                         <div onClick={pause} className="w-8 h-8 rounded-full bg-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform shadow-md">
@@ -58,10 +58,10 @@ const Player = () => {
                         </div>
                     }
                     <img onClick={() => nextTrack(false)} className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all" src={assets.next_icon} alt="Next" />
-                    <img onClick={loopSeek} className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all" src={assets.loop_icon} alt="Loop" />
+                    <img onClick={loopSeek} className="w-4 cursor-pointer hover:opacity-100 opacity-70 transition-all hidden sm:block" src={assets.loop_icon} alt="Loop" />
                 </div>
 
-                <div className="flex items-center gap-3 w-full">
+                <div className="player-progress-bar flex items-center gap-3 w-full">
                     <p className="text-[11px] text-gray-400 font-medium min-w-[35px] text-right">
                         {`${trackProgress.currentTime.minutes}:${String(trackProgress.currentTime.seconds).padStart(2, '0')}`}
                     </p>
@@ -74,7 +74,7 @@ const Player = () => {
                 </div>
             </div>
 
-            <div className="hidden lg:flex items-center gap-3 w-[25%] justify-end">
+            <div className="player-extra hidden lg:flex items-center gap-3 w-[25%] justify-end">
                 {/* <img className="w-4 cursor-pointer hover:scale-110 transition-transform" src={assets.plays_icon} alt="" /> */}
                 {/* Like and Add to Playlist buttons – hidden when an episode is playing */}
                 {!track._isEpisode && (

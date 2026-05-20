@@ -25,7 +25,7 @@ const Display = () => {
         }
     }, [location, bgColor]);
     return (
-        <div ref={displayRef} className="w-full h-full m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto">
+        <div ref={displayRef} className="display-page w-full h-full m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto">
             <Routes>
                 <Route path="/" element={<DisplayHome />} />
                 <Route path="/search" element={<DisplaySearch />} />

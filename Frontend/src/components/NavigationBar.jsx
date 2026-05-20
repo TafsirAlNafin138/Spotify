@@ -26,7 +26,7 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
     return (
         <>
             <div className="flex justify-between items-center font-semibold">
-                <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
                     <img onClick={() => navigate(-1)} className="w-8 bg-black p-2 rounded-2xl cursor-pointer hover:bg-gray-800 transition" src={assets.arrow_left} alt="" />
                     <img onClick={() => navigate(1)} className="w-8 bg-black p-2 rounded-2xl cursor-pointer hover:bg-gray-800 transition" src={assets.arrow_right} alt="" />
                 </div>

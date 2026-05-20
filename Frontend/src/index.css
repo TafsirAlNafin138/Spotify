@@ -76,3 +76,86 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar for better UI */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3e3e3e;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5e5e5e;
+}
+
+/* Mobile Responsiveness Extra CSS */
+@media (max-width: 768px) {
+  .sidebar-resizable {
+    display: none !important;
+  }
+
+  .slide-handler {
+    display: none !important;
+  }
+
+  .display-container {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .player-container {
+    height: auto !important;
+    padding: 10px 15px !important;
+    flex-wrap: wrap;
+    position: fixed;
+    bottom: 56px; /* Space for MobileNav */
+    z-index: 40;
+    backdrop-filter: blur(10px);
+    background-color: rgba(24, 24, 24, 0.9) !important;
+    border-bottom: 1px solid #282828;
+  }
+
+  .player-info {
+    width: 60% !important;
+    display: flex !important;
+  }
+
+  .player-controls {
+    width: 40% !important;
+  }
+
+  .player-extra {
+    display: none !important;
+  }
+
+  .player-progress-bar {
+    width: 100%;
+    order: 3;
+    margin-top: 5px;
+  }
+
+  .mobile-nav {
+    display: flex !important;
+  }
+
+  /* Adjust display padding on mobile */
+  .display-page {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
