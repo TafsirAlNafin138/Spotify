@@ -13,8 +13,11 @@ class Track {
 
   // Find track by ID
   static async findById(id) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      'SELECT * FROM tracks WHERE id = $1',
+      `SELECT t.*, ${artistSubquery} FROM tracks t WHERE t.id = $1`,
       [id]
     );
     return result.rows[0];
@@ -22,8 +25,11 @@ class Track {
 
   // Get all tracks
   static async findAll(limit = 50, offset = 0) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      'SELECT * FROM tracks ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      `SELECT t.*, ${artistSubquery} FROM tracks t ORDER BY t.created_at DESC LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
     return result.rows;
@@ -145,10 +151,13 @@ class Track {
 
   // Search tracks by name
   static async search(query, limit = 20) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      `SELECT * FROM tracks 
-       WHERE name ILIKE $1 
-       ORDER BY play_count DESC, name ASC 
+      `SELECT t.*, ${artistSubquery} FROM tracks t 
+       WHERE t.name ILIKE $1 
+       ORDER BY t.play_count DESC, t.name ASC 
        LIMIT $2`,
       [`%${query}%`, limit]
     );
@@ -157,8 +166,11 @@ class Track {
 
   // Get popular tracks
   static async getPopular(limit = 50) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      'SELECT * FROM tracks ORDER BY play_count DESC LIMIT $1',
+      `SELECT t.*, ${artistSubquery} FROM tracks t ORDER BY t.play_count DESC LIMIT $1`,
       [limit]
     );
     return result.rows;
@@ -166,8 +178,11 @@ class Track {
 
   // Get tracks by genre
   static async getByGenre(genreId, limit = 50, offset = 0) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      `SELECT t.*
+      `SELECT t.*, ${artistSubquery}
        FROM tracks t
        INNER JOIN track_genres tg ON t.id = tg.track_id
        WHERE tg.genre_id = $1
@@ -199,12 +214,18 @@ class Track {
   }
 
   static async getMadeForYou(userId, limit = 50) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     try {
-      const result = await db.query('SELECT * FROM get_made_for_you($1, $2)', [userId, limit]);
+      const result = await db.query(
+        `SELECT t.*, ${artistSubquery} FROM get_made_for_you($1, $2) t`,
+        [userId, limit]
+      );
       if (result.rows.length === 0) {
         const fallback = await db.query(
-          `SELECT * FROM tracks 
-           ORDER BY created_at DESC, play_count DESC 
+          `SELECT t.*, ${artistSubquery} FROM tracks t 
+           ORDER BY t.created_at DESC, t.play_count DESC 
            LIMIT $1`,
           [limit]
         );
@@ -213,13 +234,19 @@ class Track {
       return result.rows;
     } catch (error) {
       console.error("Error in getMadeForYou:", error);
-      const emergencyFallback = await db.query('SELECT * FROM tracks LIMIT $1', [limit]);
+      const emergencyFallback = await db.query(
+        `SELECT t.*, ${artistSubquery} FROM tracks t LIMIT $1`,
+        [limit]
+      );
       return emergencyFallback.rows;
     }
   }
   static async getNewReleases(limit = 50) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      'SELECT * FROM tracks ORDER BY created_at DESC LIMIT $1',
+      `SELECT t.*, ${artistSubquery} FROM tracks t ORDER BY t.created_at DESC LIMIT $1`,
       [limit]
     );
     return result.rows;
@@ -227,10 +254,13 @@ class Track {
 
   // Get tracks by album
   static async getByAlbum(albumId) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
     const result = await db.query(
-      `SELECT * FROM tracks 
-       WHERE album_id = $1 
-       ORDER BY track_number ASC`,
+      `SELECT t.*, ${artistSubquery} FROM tracks t 
+       WHERE t.album_id = $1 
+       ORDER BY t.track_number ASC`,
       [albumId]
     );
     return result.rows;

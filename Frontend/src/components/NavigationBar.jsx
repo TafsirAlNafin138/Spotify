@@ -31,13 +31,13 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
                     <img onClick={() => navigate(1)} className="w-8 bg-black p-2 rounded-2xl cursor-pointer hover:bg-gray-800 transition" src={assets.arrow_right} alt="" />
                 </div>
 
-                <div className="flex items-center gap-4 relative">
+                <div className="flex items-center gap-2 sm:gap-4 relative ml-auto">
                     {/* History button */}
                     {user && (
                         <button
                             onMouseEnter={handleHistoryHover}
                             onClick={() => navigate('/history')}
-                            className="bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white px-4 py-1 rounded-2xl text-sm font-semibold transition"
+                            className="bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white px-3 py-1 sm:px-4 rounded-2xl text-xs sm:text-sm font-semibold transition"
                         >
                             History
                         </button>
@@ -47,7 +47,7 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
                     {user && (
                         <button
                             onClick={() => navigate('/statistics')}
-                            className="bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white px-4 py-1 rounded-2xl text-sm font-semibold transition"
+                            className="bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white px-3 py-1 sm:px-4 rounded-2xl text-xs sm:text-sm font-semibold transition"
                         >
                             Statistics
                         </button>
@@ -55,7 +55,7 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
 
                     <div>
                         {isAdmin && (
-                            <button onClick={() => navigate('/admin')} className="bg-white text-black px-4 py-1 rounded-2xl cursor-pointer hover:bg-gray-200 transition">
+                            <button onClick={() => navigate('/admin')} className="bg-white text-black px-3 py-1 sm:px-4 rounded-2xl cursor-pointer hover:bg-gray-200 transition text-xs sm:text-sm">
                                 Admin Dashboard
                             </button>
                         )}
@@ -64,12 +64,12 @@ const NavigationBar = ({ activeTab = 'All', setActiveTab }) => {
                     <div className="relative">
                         <div
                             onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center cursor-pointer hover:bg-zinc-700 transition"
+                            className="w-8 h-8 sm:w-10 sm:h-10 bg-zinc-800 rounded-full flex items-center justify-center cursor-pointer hover:bg-zinc-700 transition"
                         >
                             {user?.image ? (
                                 <img src={user.image} alt="User" className="w-full h-full rounded-full object-cover" />
                             ) : (
-                                <span className="text-xl text-white font-bold">{user?.name ? user.name[0].toUpperCase() : 'U'}</span>
+                                <span className="text-sm sm:text-xl text-white font-bold">{user?.name ? user.name[0].toUpperCase() : 'U'}</span>
                             )}
                         </div>
 

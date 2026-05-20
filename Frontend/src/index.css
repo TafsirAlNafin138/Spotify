@@ -212,4 +212,13 @@
 .spotify-slider:hover::-moz-range-thumb,
 .spotify-slider:active::-moz-range-thumb {
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .spotify-slider::-webkit-slider-thumb {
+    opacity: 1 !important;
+  }
+  .spotify-slider::-moz-range-thumb {
+    opacity: 1 !important;
+  }
 }
