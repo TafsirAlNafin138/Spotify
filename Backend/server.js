@@ -33,7 +33,7 @@ app.disable('etag');
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
 app.use(morgan('dev'));
@@ -69,6 +69,11 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 2222;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
