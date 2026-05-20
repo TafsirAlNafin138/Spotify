@@ -1,5 +1,7 @@
 # Spotify Clone
 
+**Live Demo:** [https://spotify-frontend-cyan.vercel.app/](https://spotify-frontend-cyan.vercel.app/)
+
 A full-stack Spotify clone built with React, Express, and PostgreSQL (Neon).
 
 ## 🚀 Getting Started
