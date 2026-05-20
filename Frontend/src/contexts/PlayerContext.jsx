@@ -82,7 +82,7 @@ const PlayerContextProvider = (props) => {
                         name: firstTrack.name || firstTrack.title,
                         image: firstTrack.image || firstTrack.image_url,
                         file: firstTrack.path,
-                        desc: firstTrack.artist || firstTrack.desc || "",
+                        desc: firstTrack.artists || firstTrack.artist || firstTrack.desc || "",
                         duration: formatDuration(firstTrack.duration)
                     });
                 }
@@ -109,7 +109,7 @@ const PlayerContextProvider = (props) => {
         name: t.name || t.title,
         image: t.image || t.image_url,
         file: t.path,
-        desc: t.artist || t.desc || "",
+        desc: t.artists || t.artist || t.desc || "",
         duration: formatDuration(t.duration)
     });
 

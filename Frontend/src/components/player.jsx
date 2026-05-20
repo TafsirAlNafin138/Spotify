@@ -34,6 +34,10 @@ const Player = () => {
     // Mobile player states
     const [isMobileFullscreen, setIsMobileFullscreen] = React.useState(false);
     const [isShuffleActive, setIsShuffleActive] = React.useState(false);
+    
+    // Mobile seek bar drag state to prevent jump back conflicts with ontimeupdate
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [dragValue, setDragValue] = React.useState(0);
 
     const toggleMiniPlayer = () => {
         const player = document.querySelector('.player-container');
@@ -68,9 +72,18 @@ const Player = () => {
     const currentTimeInSeconds = trackProgress.currentTime.minutes * 60 + trackProgress.currentTime.seconds;
     const durationInSeconds = trackProgress.duration.minutes * 60 + trackProgress.duration.seconds;
 
-    const handleMobileSeek = (e) => {
+    const handleMobileSeekStart = () => {
+        setIsDragging(true);
+        setDragValue(currentTimeInSeconds);
+    };
+
+    const handleMobileSeekChange = (e) => {
+        setDragValue(Number(e.target.value));
+    };
+
+    const handleMobileSeekEnd = () => {
         if (audioRef?.current) {
-            const newTime = Number(e.target.value);
+            const newTime = dragValue;
             audioRef.current.currentTime = newTime;
             setTrackProgress(prev => ({
                 ...prev,
@@ -80,6 +93,7 @@ const Player = () => {
                 }
             }));
         }
+        setIsDragging(false);
     };
 
     return (
@@ -338,12 +352,21 @@ const Player = () => {
                                 type="range"
                                 min={0}
                                 max={durationInSeconds || 100}
-                                value={currentTimeInSeconds}
-                                onChange={handleMobileSeek}
-                                className="spotify-slider w-full mt-2"
+                                value={isDragging ? dragValue : currentTimeInSeconds}
+                                onTouchStart={handleMobileSeekStart}
+                                onChange={handleMobileSeekChange}
+                                onTouchEnd={handleMobileSeekEnd}
+                                onMouseDown={handleMobileSeekStart}
+                                onMouseUp={handleMobileSeekEnd}
+                                className="spotify-slider w-full mt-2 select-auto pointer-events-auto"
                             />
                             <div className="flex justify-between items-center text-[10px] text-zinc-400 font-semibold mt-1.5">
-                                <span>{`${trackProgress.currentTime.minutes}:${String(trackProgress.currentTime.seconds).padStart(2, '0')}`}</span>
+                                <span>{(() => {
+                                    const displayTime = isDragging ? dragValue : currentTimeInSeconds;
+                                    const mins = Math.floor(displayTime / 60);
+                                    const secs = Math.floor(displayTime % 60);
+                                    return `${mins}:${String(secs).padStart(2, '0')}`;
+                                })()}</span>
                                 <span>{`${trackProgress.duration.minutes}:${String(trackProgress.duration.seconds).padStart(2, '0')}`}</span>
                             </div>
                         </div>
