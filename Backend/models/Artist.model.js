@@ -133,11 +133,14 @@ class Artist {
   // Get trending artists based on followers
   static async getTrending(limit = 10) {
     const result = await db.query(
-      `SELECT a.*, COUNT(f.user_id) as follower_count
+      `SELECT a.*, 
+        (COUNT(DISTINCT f.user_id) * 50 + COALESCE(SUM(lht.progress_seconds), 0) * 0.05) as trending_score
        FROM artists a
        LEFT JOIN followers f ON a.id = f.artist_id
+       LEFT JOIN track_artists ta ON a.id = ta.artist_id
+       LEFT JOIN listening_history_tracks lht ON ta.track_id = lht.track_id
        GROUP BY a.id
-       ORDER BY follower_count DESC, a.created_at DESC
+       ORDER BY trending_score DESC, a.created_at DESC
        LIMIT $1`,
       [limit]
     );

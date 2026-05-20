@@ -178,9 +178,21 @@ class Track {
     return result.rows;
   }
 
-  static async getTrending(limit = 50) {
+  static async getTrending(limit = 10) {
+    const artistSubquery = `(SELECT string_agg(a.name, ', ') FROM artists a
+      JOIN track_artists ta ON a.id = ta.artist_id
+      WHERE ta.track_id = t.id) as artists`;
+
     const result = await db.query(
-      'SELECT * FROM tracks ORDER BY play_count DESC LIMIT $1',
+      `SELECT t.*, ${artistSubquery},
+        (COALESCE(SUM(CASE WHEN t.created_at >= NOW() - INTERVAL '7 days' THEN 2 ELSE 1 END), 0) + 
+         (t.play_count * 0.5) + 
+         (COALESCE(SUM(CASE WHEN l.like_date_time >= NOW() - INTERVAL '7 days' THEN 3 ELSE 1 END), 0))) as trending_score
+      FROM tracks t
+      LEFT JOIN likes l ON t.id = l.track_id
+      GROUP BY t.id
+      ORDER BY trending_score DESC
+      LIMIT $1`,
       [limit]
     );
     return result.rows;

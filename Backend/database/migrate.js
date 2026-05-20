@@ -2,184 +2,184 @@ import pool from '../config/database.js'
 
 async function setupDatabase() {
   const sql = `
-    CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
-  email VARCHAR(50) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  date_of_birth DATE,
-  image VARCHAR(255),
+CREATE SCHEMA IF NOT EXISTS "public";
 
-  refresh_token_hash VARCHAR(255),
-  last_login_at TIMESTAMP,
-  is_active BOOLEAN DEFAULT TRUE,
-
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "albums" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(50) NOT NULL,
+	"image" varchar(255),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE artists (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
-  bio TEXT,
-  image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "artists" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(50) NOT NULL,
+	"bio" text,
+	"image" varchar(255),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE albums (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
-  image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "genres" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(50) NOT NULL CONSTRAINT "genres_name_key" UNIQUE,
+	"created_at" timestamp DEFAULT now(),
+	"theme_color" varchar(7)
 );
 
-CREATE TABLE album_authors (
-  album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
-  artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
-  is_primary BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (album_id, artist_id)
+CREATE TABLE IF NOT EXISTS "users" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(50) NOT NULL,
+	"email" varchar(50) NOT NULL CONSTRAINT "users_email_key" UNIQUE,
+	"password_hash" varchar(255),
+	"image" varchar(255),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	"refresh_token_hash" varchar(255),
+	"last_login_at" timestamp,
+	"is_active" boolean DEFAULT true
 );
 
-CREATE TABLE tracks (
-  id SERIAL PRIMARY KEY,
-  album_id INTEGER REFERENCES albums(id) ON DELETE SET NULL,
-  name VARCHAR(50) NOT NULL,
-  duration INTEGER NOT NULL, -- in seconds
-  path VARCHAR(255),
-  image VARCHAR(255),
-  track_number INTEGER,
-  is_explicit BOOLEAN DEFAULT false,
-  play_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "podcasts" (
+	"id" serial PRIMARY KEY,
+	"title" varchar(100) NOT NULL,
+	"host_name" varchar(100),
+	"description" text,
+	"cover_image" varchar(255),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE track_artists (
-  track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-  artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
-  artist_role VARCHAR(50), -- e.g., 'Primary', 'Featured', 'Producer'
-  PRIMARY KEY (track_id, artist_id)
-);
-CREATE TABLE playlists (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name VARCHAR(50) NOT NULL,
-  image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "super_admins" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(50) NOT NULL,
+	"email" varchar(100) NOT NULL CONSTRAINT "super_admins_email_key" UNIQUE,
+	"password_hash" varchar(255) NOT NULL,
+	"is_active" boolean DEFAULT true,
+	"last_login" timestamp,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE playlist_tracks (
-  playlist_id INTEGER REFERENCES playlists(id) ON DELETE CASCADE,
-  track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-  track_order INTEGER,
-  added_at TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (playlist_id, track_id)
+CREATE TABLE IF NOT EXISTS "tracks" (
+	"id" serial PRIMARY KEY,
+	"album_id" integer REFERENCES "albums"("id") ON DELETE SET NULL,
+	"name" varchar(50) NOT NULL,
+	"duration" integer NOT NULL,
+	"path" varchar(255),
+	"image" varchar(255),
+	"track_number" integer,
+	"is_explicit" boolean DEFAULT false,
+	"play_count" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE followers (
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
-  followed_at TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (user_id, artist_id)
+CREATE TABLE IF NOT EXISTS "album_authors" (
+	"album_id" integer REFERENCES "albums"("id") ON DELETE CASCADE,
+	"artist_id" integer REFERENCES "artists"("id") ON DELETE CASCADE,
+	"is_primary" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "album_artists_pkey" PRIMARY KEY("album_id","artist_id")
 );
 
-CREATE TABLE likes (
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-  like_date_time TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (user_id, track_id)
+CREATE TABLE IF NOT EXISTS "album_genres" (
+	"album_id" integer REFERENCES "albums"("id") ON DELETE CASCADE,
+	"genre_id" integer REFERENCES "genres"("id") ON DELETE CASCADE,
+	CONSTRAINT "album_genres_pkey" PRIMARY KEY("album_id","genre_id")
 );
 
-CREATE TABLE genres (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(50) UNIQUE NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "episodes" (
+	"id" serial PRIMARY KEY,
+	"podcast_id" integer NOT NULL REFERENCES "podcasts"("id") ON DELETE CASCADE,
+	"title" varchar(100) NOT NULL,
+	"description" text,
+	"duration" integer,
+	"audio_path" varchar(255),
+	"release_date" timestamp,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE track_genres (
-  track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-  genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
-  PRIMARY KEY (track_id, genre_id)
+CREATE TABLE IF NOT EXISTS "followers" (
+	"user_id" integer REFERENCES "users"("id") ON DELETE CASCADE,
+	"artist_id" integer REFERENCES "artists"("id") ON DELETE CASCADE,
+	"followed_at" timestamp DEFAULT now(),
+	CONSTRAINT "followers_pkey" PRIMARY KEY("user_id","artist_id")
 );
 
-CREATE TABLE album_genres (
-  album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
-  genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
-  PRIMARY KEY (album_id, genre_id)
+CREATE TABLE IF NOT EXISTS "likes" (
+	"user_id" integer REFERENCES "users"("id") ON DELETE CASCADE,
+	"track_id" integer REFERENCES "tracks"("id") ON DELETE CASCADE,
+	"like_date_time" timestamp DEFAULT now(),
+	CONSTRAINT "likes_pkey" PRIMARY KEY("user_id","track_id")
 );
 
-CREATE TABLE podcasts (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR(100) NOT NULL,
-  host_name VARCHAR(100),
-  description TEXT,
-  cover_image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "listening_history_episodes" (
+	"id" serial PRIMARY KEY,
+	"user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+	"episode_id" integer NOT NULL REFERENCES "episodes"("id") ON DELETE CASCADE,
+	"progress_seconds" integer DEFAULT 0,
+	"is_completed" boolean DEFAULT false,
+	"last_played_at" timestamp with time zone DEFAULT now(),
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "listening_history_episodes_user_id_episode_id_key" UNIQUE("user_id","episode_id")
 );
 
-CREATE TABLE episodes (
-  id SERIAL PRIMARY KEY,
-  podcast_id INTEGER NOT NULL REFERENCES podcasts(id) ON DELETE CASCADE,
-  title VARCHAR(100) NOT NULL,
-  description TEXT,
-  duration INTEGER,
-  audio_path VARCHAR(255),
-  release_date TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "listening_history_tracks" (
+	"id" serial PRIMARY KEY,
+	"user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+	"track_id" integer NOT NULL REFERENCES "tracks"("id") ON DELETE CASCADE,
+	"progress_seconds" integer DEFAULT 0,
+	"is_completed" boolean DEFAULT false,
+	"last_played_at" timestamp with time zone DEFAULT now(),
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "listening_history_tracks_user_id_track_id_key" UNIQUE("user_id","track_id")
 );
 
-CREATE TABLE podcast_followers (
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  podcast_id INTEGER REFERENCES podcasts(id) ON DELETE CASCADE,
-  followed_at TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (user_id, podcast_id)
+CREATE TABLE IF NOT EXISTS "playlists" (
+	"id" serial PRIMARY KEY,
+	"user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+	"name" varchar(50) NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE listening_history_tracks (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  progress_seconds INTEGER DEFAULT 0,
-  is_completed BOOLEAN DEFAULT false,
-  last_played_at TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE (user_id, track_id)
+CREATE TABLE IF NOT EXISTS "playlist_tracks" (
+	"playlist_id" integer REFERENCES "playlists"("id") ON DELETE CASCADE,
+	"track_id" integer REFERENCES "tracks"("id") ON DELETE CASCADE,
+	"track_order" integer,
+	"added_at" timestamp DEFAULT now(),
+	CONSTRAINT "playlist_tracks_pkey" PRIMARY KEY("playlist_id","track_id")
 );
 
-CREATE TABLE listening_history_episodes (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  episode_id INTEGER NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
-  progress_seconds INTEGER DEFAULT 0,
-  is_completed BOOLEAN DEFAULT false,
-  last_played_at TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE (user_id, episode_id)
+CREATE TABLE IF NOT EXISTS "podcast_followers" (
+	"user_id" integer REFERENCES "users"("id") ON DELETE CASCADE,
+	"podcast_id" integer REFERENCES "podcasts"("id") ON DELETE CASCADE,
+	"followed_at" timestamp DEFAULT now(),
+	CONSTRAINT "podcast_followers_pkey" PRIMARY KEY("user_id","podcast_id")
 );
 
-CREATE TABLE super_admins (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  last_login TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS "track_artists" (
+	"track_id" integer REFERENCES "tracks"("id") ON DELETE CASCADE,
+	"artist_id" integer REFERENCES "artists"("id") ON DELETE CASCADE,
+	"artist_role" varchar(50),
+	CONSTRAINT "track_artists_pkey" PRIMARY KEY("track_id","artist_id")
+);
+
+CREATE TABLE IF NOT EXISTS "track_genres" (
+	"track_id" integer REFERENCES "tracks"("id") ON DELETE CASCADE,
+	"genre_id" integer REFERENCES "genres"("id") ON DELETE CASCADE,
+	CONSTRAINT "track_genres_pkey" PRIMARY KEY("track_id","genre_id")
 );
   `;
 
   try {
     await pool.query(sql);
-    console.log("Successful");
+    console.log("Migration successful");
   } catch (err) {
-    console.error(err);
+    console.error("Migration failed:", err);
   } finally {
     process.exit();
   }

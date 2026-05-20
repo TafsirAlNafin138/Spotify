@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "dbtest": "node ./tests/testdb-conn.js",
-    "dbinsert": "node ./tests/insertdatatest.js"
+    "dbinsert": "node ./tests/insertdatatest.js",
+    "migrate": "node database/migrate.js",
+    "setup-db": "node database/migrate.js && node database/run_migrations.js"
   },
   "keywords": [],
   "author": "",

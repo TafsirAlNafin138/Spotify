@@ -40,7 +40,7 @@ export const getTrackById = async (req, res) => {
 
 export const getTrandingSongs = async (req, res) => {
     try {
-        const tracks = await Track.getTrending();
+        const tracks = await Track.getTrending(10);
         return res.status(200).json(new ApiResponse(200, tracks, "Trending Tracks fetched successfully"));
     } catch (error) {
         console.error("Error in getTrandingSongs:", error);

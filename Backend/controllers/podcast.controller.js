@@ -26,3 +26,13 @@ export const getPodcastById = async (req, res) => {
         return res.status(500).json(new ApiError(500, "Internal server error", error));
     }
 }
+
+export const getTrendingPodcasts = async (req, res) => {
+    try {
+        const podcasts = await Podcast.getTrending(10);
+        return res.status(200).json(new ApiResponse(200, podcasts, "Trending Podcasts fetched successfully"));
+    } catch (error) {
+        console.error("Error in getTrendingPodcasts:", error);
+        return res.status(500).json(new ApiError(500, "Internal server error", error));
+    }
+}

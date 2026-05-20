@@ -137,6 +137,21 @@ class Podcast {
         };
     }
 
+    // Get trending podcasts
+    static async getTrending(limit = 10) {
+        const result = await db.query(
+            `SELECT p.*, 
+        (COUNT(DISTINCT fp.user_id) * 50 + COALESCE(SUM(lhe.progress_seconds), 0) * 0.05) as trending_score
+      FROM podcasts p
+      LEFT JOIN podcast_followers fp ON p.id = fp.podcast_id
+      LEFT JOIN episodes e ON p.id = e.podcast_id
+      LEFT JOIN listening_history_episodes lhe ON e.id = lhe.episode_id
+      GROUP BY p.id ORDER BY trending_score DESC LIMIT $1`,
+            [limit]
+        );
+        return result.rows;
+    }
+
     // Get total count of podcasts
     static async count() {
         const result = await db.query(

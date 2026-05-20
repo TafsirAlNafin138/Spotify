@@ -34,8 +34,8 @@ A full-stack Spotify clone built with React, Express, and PostgreSQL (Neon).
    ```
 4. **Run Database Migrations:**
    ```bash
-   npm run dbtest  # Verify connection
-   node database/run_migrations.js
+   npm run dbtest    # Verify connection
+   npm run setup-db  # Initialize tables, triggers, and procedures
    ```
 5. **Start the server:**
    ```bash
